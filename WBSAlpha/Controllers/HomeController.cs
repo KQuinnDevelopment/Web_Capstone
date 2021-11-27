@@ -1,12 +1,11 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Threading.Tasks;
 using WBSAlpha.Models;
-
+/*
+Modified By:    Quinn Helm
+Date:           27-09-2021
+*/
 namespace WBSAlpha.Controllers
 {
     public class HomeController : Controller
@@ -19,6 +18,11 @@ namespace WBSAlpha.Controllers
         }
 
         public IActionResult Index()
+        {
+            return View();
+        }
+
+        public IActionResult About()
         {
             return View();
         }

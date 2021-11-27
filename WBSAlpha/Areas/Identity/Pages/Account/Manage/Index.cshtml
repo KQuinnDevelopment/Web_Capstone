@@ -1,0 +1,76 @@
+﻿@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Profile";
+    ViewData["ActivePage"] = ManageNavPages.Index;
+}
+<!--
+Modified By:    Quinn Helm
+Date:           02-11-2021
+-->
+<partial name="_StatusMessage" model="Model.StatusMessage" />
+<div class="col-12 mx-auto">
+    <form asp-route="" method="post">
+        <span class="col-12 mx-auto align-middle text-center text-danger" asp-validation-for="Input.UserName"></span>
+        <div class="form-group row mx-auto">
+            <label class="col-4 col-form-label mx-auto text-center" asp-for="Input.UserName"></label>
+            <input class="col-4 mx-auto align-middle text-center form-control" asp-for="Input.UserName" />
+            <div class="col-4 mx-auto align-middle text-center">
+                <button class="btn btn-outline-success" id="update-profile-button" type="submit">Update</button>
+            </div>
+        </div>
+    </form>
+    <table class="table">
+        <tbody>
+            <tr>
+                <td class="col-4 mx-auto align-middle text-center">Password</td>
+                <td class="col-4"></td>
+                <td class="col-4 mx-auto text-center">
+                    <a class="btn btn-outline-danger @ManageNavPages.ChangePasswordNavClass(ViewContext)" id="change-password" asp-page="./ChangePassword">Change</a>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-4 mx-auto align-middle text-center">Email</td>
+                <td class="col-4 mx-auto align-middle text-center">@ViewData.Model.Email</td>
+                <td class="col-4 text-center">
+                    <a class="btn btn-outline-danger @ManageNavPages.EmailNavClass(ViewContext)" id="email" asp-page="./Email">Change</a>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-4 mx-auto align-middle text-center">Age</td>
+                <td class="col-4 mx-auto align-middle text-center">@ViewData.Model.Age</td>
+                <td class="col-4"></td>
+            </tr>
+            <tr>
+                <td class="col-4 mx-auto align-middle text-center">Account Created</td>
+                <td class="col-4 align-middle text-center">@ViewData.Model.Created</td>
+                <td class="col-4"></td>
+            </tr>
+            <tr>
+                <td class="col-4 mx-auto text-center">
+                    <a class="btn btn-outline-success @ManageNavPages.TwoFactorAuthenticationNavClass(ViewContext)" id="two-factor" asp-page="./TwoFactorAuthentication">Two-Factor Authentication</a>
+                </td>
+                <td class="col-4"></td>
+                <td class="col-4 mx-auto text-center">
+                    <button class="btn btn-danger">Close Account</button>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-4 mx-auto text-center">Average Build Rating</td>
+                <td class="col-4 text-center"></td>
+                <td class="col-4"></td>
+            </tr>
+            <tr>
+                <td class="col-4"></td>
+                <td class="col-4 mx-auto text-center">
+                    <a class="btn btn-success text-white mx-auto" asp-controller="Games" asp-action="Chat">Enter Chat</a>
+                </td>
+                <td class="col-4"></td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

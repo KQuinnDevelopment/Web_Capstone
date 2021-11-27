@@ -1,0 +1,89 @@
+﻿@model IEnumerable<WBSAlpha.Models.GameOneBuild>
+
+@{
+    ViewData["Title"] = "Builds";
+}
+
+<h1>Builds</h1>
+
+<p>
+    <a asp-action="Create">Create New</a>
+</p>
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.WeaponOne)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.WeaponTwo)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.OffensiveRuneOne)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.OffensiveRuneTwo)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.DefensiveRune)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.BuildName)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Description)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Notes)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Rating)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.CreationDate)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model) {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.WeaponOne)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.WeaponTwo)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.OffensiveRuneOne)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.OffensiveRuneTwo)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.DefensiveRune)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.BuildName)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Description)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Notes)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Rating)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.CreationDate)
+            </td>
+            <td>
+                <a asp-action="Edit" asp-route-id="@item.BuildID">Edit</a> |
+                <a asp-action="Details" asp-route-id="@item.BuildID">Details</a> |
+                <a asp-action="Delete" asp-route-id="@item.BuildID">Delete</a>
+            </td>
+        </tr>
+}
+    </tbody>
+</table>

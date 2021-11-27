@@ -1,0 +1,32 @@
+﻿@{
+    ViewData["Title"] = "Chat";
+}
+<h2 class="mx-auto mb-2 text-center">Games Chat</h2>
+<div class="container mh-100" style="height: 75vh; border:2px solid black;">
+    <div class="row">
+        <div class="col-9">
+            <ul class="nav nav-tabs nav-fill list-unstyled" id="chatList">
+                <li class="nav-item"><a class="navbar-brand" asp-area="Identity" asp-page="/Account/Manage/Index">@ViewBag.UserName</a></li>
+            </ul>
+            <ul class="mx-auto mb-2 w-100" id="chatBox" style="height: 60vh; border: 2px solid black;"></ul>
+            <form class="form-inline my-auto w-100">
+                <textarea class="form-control col-10 px-1 text-left" rows="2" type="text" style="border:2px solid black; resize:none;" maxlength="280" placeholder="Enter message..."></textarea>
+                <button id="sendMessageButton" type="submit" class="btn-lg btn-dark m-auto">Send</button>
+            </form>
+        </div>
+        <div class="col-3">
+            <ul class="list-unstyled p-2">
+                <li class="mb-2 pb-2 text-center border-bottom">Moderators</li>
+                <li>
+                    <ul class="list-unstyled" id="mods"></ul>
+                </li>
+                <li class="mb-2 pb-2 text-center border-bottom">Users</li>
+                <li>
+                    <ul class="list-unstyled" id="normalUsers"></ul>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+<script src="~/js/signalr/dist/browser/signalr.js"></script>
+<script src="~/js/chat.js"></script>

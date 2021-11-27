@@ -1,0 +1,25 @@
+﻿@{
+    if (ViewData.TryGetValue("ParentLayout", out var parentLayout))
+    {
+        Layout = (string)parentLayout;
+    }
+    else
+    {
+        Layout = "/Areas/Identity/Pages/_Layout.cshtml";
+    }
+}
+<!--
+Modified By:    Quinn Helm
+Date:           27-10-2021
+-->
+<h2 class="mx-auto text-center">Profile</h2>
+
+<div>
+    <div class="col-10 mx-auto">
+        @RenderBody()
+    </div>
+</div>
+
+@section Scripts {
+    @RenderSection("Scripts", required: false)
+}

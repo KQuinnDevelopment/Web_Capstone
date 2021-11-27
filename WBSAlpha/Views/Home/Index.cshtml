@@ -1,8 +1,15 @@
 ﻿@{
     ViewData["Title"] = "Home Page";
 }
-
+<!--
+Author: Quinn Helm
+Date:   02-11-2021
+-->
 <div class="text-center">
     <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://docs.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+    <!-- logo goes here -->
+    <p>Wolf's Bite Studio is an up and coming game development studio based out of Ontario, Canada.</p>
+    <p>For more information about our upcoming game, <a class="text-dark" asp-area="" asp-controller="Games" asp-action="Index">check out Games</a>.</p>
+    <p>Or <a class="text-dark" asp-controller="Games" asp-action="Chat">join our chatroom here!</a></p>
+    <p>Find out more <a class="text-dark" asp-controller="Home" asp-action="About">About Us</a>.</p>
 </div>
