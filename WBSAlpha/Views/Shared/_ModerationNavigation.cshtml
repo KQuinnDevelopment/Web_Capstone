@@ -1,0 +1,17 @@
+﻿<div class="container">
+    <div class="row">
+        <ul class="navbar-nav">
+            <li class=""><a class="" asp-controller="Moderation" asp-action="Metrics">Metrics</a></li>
+            <li class=""><a class="" asp-controller="Moderation" asp-action="Reports">Moderation</a></li>
+            <li class=""><a class="" asp-controller="Moderation" asp-action="ChatHistory">Chat History</a></li>
+            @if (User.IsInRole("Administrator"))
+            {
+                // it makes the most sense to have these be grouped by role instead of what is in the diagrams
+                <li class=""><a class="" asp-controller="Games" asp-action="ManageBans">Bans</a></li>
+                <li class=""><a class="" asp-controller="Games" asp-action="ManageModerators">Manage Moderators</a></li>
+                <li class=""><a class="" asp-controller="Games" asp-action="ManageChatrooms">Chatrooms</a></li>
+                <li class=""><a class="" asp-controller="Games" asp-action="ManageBuilds">Builds</a></li>
+            }
+        </ul>
+    </div>
+</div>

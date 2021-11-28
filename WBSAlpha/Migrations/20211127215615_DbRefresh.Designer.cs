@@ -10,8 +10,8 @@ using WBSAlpha.Data;
 namespace WBSAlpha.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20211121153244_MajorChanges")]
-    partial class MajorChanges
+    [Migration("20211127215615_DbRefresh")]
+    partial class DbRefresh
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -224,7 +224,7 @@ namespace WBSAlpha.Migrations
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("StandingID")
+                    b.Property<int>("StandingID")
                         .HasColumnType("int");
 
                     b.Property<bool>("TwoFactorEnabled")
@@ -243,8 +243,6 @@ namespace WBSAlpha.Migrations
                         .IsUnique()
                         .HasDatabaseName("UserNameIndex")
                         .HasFilter("[NormalizedUserName] IS NOT NULL");
-
-                    b.HasIndex("StandingID");
 
                     b.ToTable("AspNetUsers");
                 });
@@ -304,7 +302,7 @@ namespace WBSAlpha.Migrations
                         .HasColumnType("int")
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
-                    b.Property<int?>("ChatID1")
+                    b.Property<int>("ChatID")
                         .HasColumnType("int");
 
                     b.Property<string>("Content")
@@ -322,8 +320,6 @@ namespace WBSAlpha.Migrations
                         .HasColumnType("datetime2");
 
                     b.HasKey("MessageID");
-
-                    b.HasIndex("ChatID1");
 
                     b.ToTable("Messages");
                 });
@@ -480,24 +476,6 @@ namespace WBSAlpha.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-                });
-
-            modelBuilder.Entity("WBSAlpha.Models.CoreUser", b =>
-                {
-                    b.HasOne("WBSAlpha.Models.Standing", "Standing")
-                        .WithMany()
-                        .HasForeignKey("StandingID");
-
-                    b.Navigation("Standing");
-                });
-
-            modelBuilder.Entity("WBSAlpha.Models.Message", b =>
-                {
-                    b.HasOne("WBSAlpha.Models.Chatroom", "ChatID")
-                        .WithMany()
-                        .HasForeignKey("ChatID1");
-
-                    b.Navigation("ChatID");
                 });
 #pragma warning restore 612, 618
         }

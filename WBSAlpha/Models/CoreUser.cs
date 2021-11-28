@@ -3,16 +3,16 @@ using System;
 using System.ComponentModel.DataAnnotations;
 /*
 Modified By:    Quinn Helm
-Date:           17-10-2021
+Date:           27-11-2021
 */
 namespace WBSAlpha.Models
 {
     public class CoreUser : IdentityUser 
     {
         [Required]
-        [DataType(DataType.Date)]
+        [DataType(DataType.DateTime)]
         [Display(Name = "Date of Birth")]
-        [DisplayFormat(DataFormatString = "{0:g}", ApplyFormatInEditMode = true)]
+        [DisplayFormat(DataFormatString = "{0:yyyy-MM-dd}", ApplyFormatInEditMode = true)]
         public DateTime Age { get; set; }
 
         [Required]
@@ -21,8 +21,6 @@ namespace WBSAlpha.Models
         [DisplayFormat(DataFormatString = "{0:g}", ApplyFormatInEditMode = true)]
         public DateTime Created { get; set; }
 
-        [Required]
-        [Display(Name = "User Standing ID")]
-        public Standing Standing { get; set; }
+        public int StandingID { get; set; }
     }
 }

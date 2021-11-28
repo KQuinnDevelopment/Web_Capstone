@@ -5,15 +5,17 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Logging;
+using System;
 using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Threading.Tasks;
+using WBSAlpha.Data;
 using WBSAlpha.Models;
 /*
 Modified By:    Quinn Helm
-Date:           17-10-2021
+Date:           27-11-2021
 */
 namespace WBSAlpha.Areas.Identity.Pages.Account
 {
@@ -22,17 +24,20 @@ namespace WBSAlpha.Areas.Identity.Pages.Account
     {
         private readonly SignInManager<CoreUser> _signInManager;
         private readonly UserManager<CoreUser> _userManager;
+        private readonly ApplicationDbContext _dbContext;
         private readonly IEmailSender _emailSender;
         private readonly ILogger<ExternalLoginModel> _logger;
 
         public ExternalLoginModel(
             SignInManager<CoreUser> signInManager,
             UserManager<CoreUser> userManager,
+            ApplicationDbContext context,
             ILogger<ExternalLoginModel> logger,
             IEmailSender emailSender)
         {
             _signInManager = signInManager;
             _userManager = userManager;
+            _dbContext = context;
             _logger = logger;
             _emailSender = emailSender;
         }
@@ -49,6 +54,16 @@ namespace WBSAlpha.Areas.Identity.Pages.Account
 
         public class InputModel
         {
+            [Display(Name = "Public User Name")]
+            [StringLength(45, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 3)]
+            public string UserName { get; set; }
+
+            [Required]
+            [DataType(DataType.DateTime)]
+            [Display(Name = "Date of Birth")]
+            [DisplayFormat(DataFormatString = "{0:yyyy - MM - dd}", ApplyFormatInEditMode = true)]
+            public DateTime Age { get; set; }
+
             [Required]
             [EmailAddress]
             public string Email { get; set; }
@@ -122,8 +137,16 @@ namespace WBSAlpha.Areas.Identity.Pages.Account
 
             if (ModelState.IsValid)
             {
-                var user = new CoreUser { UserName = Input.Email, Email = Input.Email, Standing = new Standing() };
-
+                Standing uStanding = new Standing();
+                await _dbContext.Standings.AddAsync(uStanding);
+                await _dbContext.SaveChangesAsync();
+                DateTime createdOn = DateTime.Now;
+                DateTime age = new DateTime(Input.Age.Year, Input.Age.Month, Input.Age.Day);
+                var user = new CoreUser { UserName = Input.UserName, Email = Input.Email, Age = age, Created = createdOn, StandingID = uStanding.StandingID };
+                if (Input.UserName.Equals(""))
+                {
+                    user.UserName = Input.Email;
+                }
                 var result = await _userManager.CreateAsync(user);
                 if (result.Succeeded)
                 {

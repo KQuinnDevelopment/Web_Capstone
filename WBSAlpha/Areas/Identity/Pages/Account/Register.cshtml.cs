@@ -13,10 +13,11 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Logging;
+using WBSAlpha.Data;
 using WBSAlpha.Models;
 /*
 Modified By:    Quinn Helm
-Date:           17-10-2021
+Date:           27-11-2021
 */
 namespace WBSAlpha.Areas.Identity.Pages.Account
 {
@@ -25,17 +26,20 @@ namespace WBSAlpha.Areas.Identity.Pages.Account
     {
         private readonly SignInManager<CoreUser> _signInManager;
         private readonly UserManager<CoreUser> _userManager;
+        private readonly ApplicationDbContext _dbContext;
         private readonly ILogger<RegisterModel> _logger;
         private readonly IEmailSender _emailSender;
 
         public RegisterModel(
             UserManager<CoreUser> userManager,
             SignInManager<CoreUser> signInManager,
+            ApplicationDbContext context,
             ILogger<RegisterModel> logger,
             IEmailSender emailSender)
         {
             _userManager = userManager;
             _signInManager = signInManager;
+            _dbContext = context;
             _logger = logger;
             _emailSender = emailSender;
         }
@@ -59,9 +63,9 @@ namespace WBSAlpha.Areas.Identity.Pages.Account
             public string Email { get; set; }
 
             [Required]
-            [DataType(DataType.Date)]
+            [DataType(DataType.DateTime)]
             [Display(Name = "Date of Birth")]
-            [DisplayFormat(DataFormatString = "{0:g}", ApplyFormatInEditMode = true)]
+            [DisplayFormat(DataFormatString = "{0:yyyy-MM-dd}", ApplyFormatInEditMode = true)]
             public DateTime Age { get; set; }
 
             [Required]
@@ -88,8 +92,12 @@ namespace WBSAlpha.Areas.Identity.Pages.Account
             ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
             if (ModelState.IsValid)
             {
-                // need to get new standing to increment
-                var user = new CoreUser { Email = Input.Email, Age = Input.Age, Created = DateTime.Now, Standing = new Standing() };
+                Standing uStanding = new Standing();
+                await _dbContext.Standings.AddAsync(uStanding);
+                await _dbContext.SaveChangesAsync();
+                DateTime createdOn = DateTime.Now;
+                DateTime age = new DateTime(Input.Age.Year,Input.Age.Month,Input.Age.Day);
+                var user = new CoreUser { UserName = Input.UserName, Email = Input.Email, Age = age, Created = createdOn, StandingID = uStanding.StandingID };
                 if (Input.UserName.Equals(""))
                 {
                     user.UserName = Input.Email;

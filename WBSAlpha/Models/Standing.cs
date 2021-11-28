@@ -1,8 +1,9 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 /*
 Modified By:    Quinn Helm
-Date:           18-09-2021
+Date:           27-11-2021
 */
 namespace WBSAlpha.Models
 {

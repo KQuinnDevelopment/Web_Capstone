@@ -1,0 +1,54 @@
+﻿@page
+@model IEnumerable<WBSAlpha.Models.GameOneBuild>
+@{
+    ViewData["Title"] = "Manage Builds";
+}
+<div>
+    <h1>@ViewData["Title"]</h1>
+
+    <partial name="~/Views/Shared/_ModerationNavigation.cshtml" />
+    <div class="container mh-100" style="height: 75vh; border: 2px solid black; overflow-y: scroll; overflow-x: inherit;">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>
+                        @Html.DisplayNameFor(model => model.BuildName)
+                    </th>
+                    <th>
+                        @Html.DisplayNameFor(model => model.Description)
+                    </th>
+                    <th>
+                        @Html.DisplayNameFor(model => model.Rating)
+                    </th>
+                    <th>
+                        @Html.DisplayNameFor(model => model.CreationDate)
+                    </th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.BuildName)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.Description)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.Rating)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.CreationDate)
+                        </td>
+                        <td>
+                            <a asp-controller="Games" asp-action="BuildDetails" asp-route-id="@item.BuildID">Details</a> |
+                            <a asp-controller="Games" asp-action="DeleteBuild" asp-route-id="@item.BuildID">Delete</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

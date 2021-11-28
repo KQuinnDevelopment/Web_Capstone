@@ -77,7 +77,8 @@ namespace WBSAlpha.Areas.Identity.Pages.Account.Manage
             {
                 rating += build.Rating;
             }
-            AverageBuildRating = rating / builds.Count; // this does not have to be the most accurate
+            // this does not have to be the most accurate
+            AverageBuildRating = (builds.Count) > 0 ? (rating / builds.Count) : 0;
             // it is not a life or death application of rounding, so integer division will suffice
 
             UserName = userName;

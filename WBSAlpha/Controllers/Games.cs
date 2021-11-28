@@ -8,7 +8,7 @@ using WBSAlpha.Data;
 using WBSAlpha.Models;
 /*
 Modified By:    Quinn Helm
-Date:           26-11-2021
+Date:           27-11-2021
 */
 namespace WBSAlpha.Controllers
 {
@@ -36,9 +36,9 @@ namespace WBSAlpha.Controllers
         }
 
         [AllowAnonymous]
-        public IActionResult ViewBuilds()
+        public IActionResult BuildDetails()
         {
-            return View();
+            return View("Builds");
         }
 
         public IActionResult CreateBuild()
@@ -57,7 +57,8 @@ namespace WBSAlpha.Controllers
             {
                 validUserName = !user.NormalizedUserName.Equals(user.NormalizedEmail);
                 DateTime time = DateTime.Now;
-                Standing uStanding = await _dbContext.Standings.FirstOrDefaultAsync(u => u.StandingID == user.Standing.StandingID);
+                Standing uStanding = await _dbContext.Standings.FirstOrDefaultAsync(u => u.StandingID == user.StandingID);
+
                 if (uStanding != null) {
                     if (uStanding.BanEnds != null)
                     {

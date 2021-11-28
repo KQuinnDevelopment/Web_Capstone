@@ -222,7 +222,7 @@ namespace WBSAlpha.Migrations
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("StandingID")
+                    b.Property<int>("StandingID")
                         .HasColumnType("int");
 
                     b.Property<bool>("TwoFactorEnabled")
@@ -241,8 +241,6 @@ namespace WBSAlpha.Migrations
                         .IsUnique()
                         .HasDatabaseName("UserNameIndex")
                         .HasFilter("[NormalizedUserName] IS NOT NULL");
-
-                    b.HasIndex("StandingID");
 
                     b.ToTable("AspNetUsers");
                 });
@@ -476,15 +474,6 @@ namespace WBSAlpha.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-                });
-
-            modelBuilder.Entity("WBSAlpha.Models.CoreUser", b =>
-                {
-                    b.HasOne("WBSAlpha.Models.Standing", "Standing")
-                        .WithMany()
-                        .HasForeignKey("StandingID");
-
-                    b.Navigation("Standing");
                 });
 #pragma warning restore 612, 618
         }

@@ -1,0 +1,43 @@
+﻿@page
+@model IEnumerable<WBSAlpha.Models.Chatroom>
+@{
+    ViewData["Title"] = "Manage Chatrooms";
+}
+<div>
+    <h1>@ViewData["Title"]</h1>
+
+    <partial name="~/Views/Shared/_ModerationNavigation.cshtml" />
+    <div class="container mh-100" style="height: 75vh; border: 2px solid black; overflow-y: scroll;">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>
+                        @Html.DisplayNameFor(model => model.ChatName)
+                    </th>
+                    <th>
+                        @Html.DisplayNameFor(model => model.Description)
+                    </th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.ChatName)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.Description)
+                        </td>
+                        <td>
+                            <a class="btn btn-warning" asp-controller="Moderation" asp-action="EditChatrooom" asp-route-id="@item.ChatID">Edit</a> |
+                            <a class="btn btn-danger" asp-controller="Moderation" asp-action="DeleteChatroom" asp-route-id="@item.ChatID">Delete</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+        <a class="btn btn-outline-dark text-dark mx-auto p-2" asp-controller="Moderation" asp-action="AddChatroom">Add Chatroom</a>
+    </div>
+</div>

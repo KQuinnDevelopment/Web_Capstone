@@ -13,7 +13,7 @@ using WBSAlpha.Data;
 using WBSAlpha.Models;
 /*
 Modified By:    Quinn Helm
-Date:           23-11-2021
+Date:           27-11-2021
 */
 namespace WBSAlpha.Hubs
 {
@@ -58,7 +58,7 @@ namespace WBSAlpha.Hubs
             try
             {
                 CoreUser newUser = _dbContext.Users.FindAsync(Context.ConnectionId).Result;
-                await Clients.All.SendAsync("AddNewUser", newUser.Standing.StandingID, 
+                await Clients.All.SendAsync("AddNewUser", newUser.StandingID, 
                     newUser.NormalizedUserName, (Context.User.IsInRole("Moderator") || Context.User.IsInRole("Admin")));
             } 
             catch (Exception ex)
@@ -80,7 +80,7 @@ namespace WBSAlpha.Hubs
                 if (isPrivate)
                 {
                     CoreUser myself = _dbContext.Users.FindAsync(Context.ConnectionId).Result;
-                    CoreUser other = _dbContext.Users.FirstOrDefault(u => u.Standing.StandingID == join);
+                    CoreUser other = _dbContext.Users.FirstOrDefault(u => u.StandingID == join);
 
                     if (!wasPrivate)
                     {
@@ -175,9 +175,9 @@ namespace WBSAlpha.Hubs
                 try
                 {
                     CoreUser fUser = await _dbContext.Users.FindAsync(Context.UserIdentifier);
-                    CoreUser tUser = await _dbContext.Users.FirstOrDefaultAsync(u => u.Standing.StandingID == toUser);
+                    CoreUser tUser = await _dbContext.Users.FirstOrDefaultAsync(u => u.StandingID == toUser);
                     from = fUser.NormalizedUserName;
-                    fKey = fUser.Standing.StandingID;
+                    fKey = fUser.StandingID;
                     to = tUser.Id;
                     
                     Message sent = new Message();
