@@ -1,12 +1,36 @@
 ﻿@page
 @{
     ViewData["Title"] = "Manage Moderators";
+    CoreUser[] users = (CoreUser[]) ViewData["Users"];
+    Standing[] standings = (Standing[]) ViewData["Standing"];
 }
 <div>
     <h1>@ViewData["Title"]</h1>
-
     <partial name="~/Views/Shared/_ModerationNavigation.cshtml" />
     <div class="container mh-100" style="height: 75vh; border:2px solid black; overflow-y: scroll; overflow-x: inherit;">
-        <div class="row"><p>content goes here...</p></div>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>User Name</th>
+                    <th>Kick Count</th>
+                    <th>Ban Count</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                @for (int i = 0; i < users.Length; i++)
+                {
+                <tr>
+                    <td>@users[i].UserName</td>
+                    <td>@standings[i].KickCount</td>
+                    <td>@standings[i].BanCount</td>
+                    <td>
+                        <a class="btn btn-warning" asp-controller="Moderation" asp-action="PromoteUser" asp-route-id="@users[i].Id">Promote</a>
+                        <a class="btn btn-danger" asp-controller="Moderation" asp-action="DemoteUser" asp-route-id="@users[i].Id">Demote</a>
+                    </td>
+                </tr>
+                }
+            </tbody>
+        </table>
     </div>
 </div>

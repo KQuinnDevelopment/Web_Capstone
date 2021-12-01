@@ -1,12 +1,38 @@
 ﻿@page
 @{
     ViewData["Title"] = "Manage Chat Reports";
+    Report[] reports = (Report[])ViewData["ActiveReports"];
+    string[] messages = (string[])ViewData["RudeMessages"];
+    string[] userName = (string[])ViewData["ReportedNames"];
 }
 <div>
     <h1>@ViewData["Title"]</h1>
 
     <partial name="~/Views/Shared/_ModerationNavigation.cshtml" />
     <div class="container mh-100" style="height: 75vh; border: 2px solid black; overflow-y: scroll; overflow-x: inherit;">
-        <div class="row"><p>content goes here...</p></div>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>User Name</th>
+                    <th>Message</th>
+                    <th>Reason</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                @for (int i = 0; i < userName.Length; i++)
+                {
+                <tr>
+                    <td>@userName[i]</td>
+                    <td>@messages[i]</td>
+                    <td>@reports[i].Reason</td>
+                    <td>
+                        <a class="btn btn-warning" asp-controller="Moderation" asp-action="IgnoreReport" asp-route-id="@reports[i].ReportID">Ignore</a> |
+                        <a class="btn btn-danger" asp-controller="Moderation" asp-action="KickUser" asp-route-id="@reports[i].ReportID">Kick</a>
+                    </td>
+                </tr>
+                }
+            </tbody>
+        </table>
     </div>
 </div>

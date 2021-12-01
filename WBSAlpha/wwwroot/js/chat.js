@@ -1,7 +1,7 @@
 ﻿"use strict";
 /*
 Modified By: Quinn Helm
-Date:        23-11-2021
+Date:        01-12-2021
 */
 var connection = new signalR.HubConnectionBuilder().withUrl("/Chathub").build();
 var roomID = -1;
@@ -113,6 +113,10 @@ connection.on("AddNewUser", function (id, name, isModerator) {
     } else {
         document.getElementById("normalUsers").appendChild(li);
     }
+});
+
+connection.on("Disconnect", function () {
+    connection.stop();
 });
 
 connection.start().then(function () {

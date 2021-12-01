@@ -13,7 +13,7 @@ using WBSAlpha.Data;
 using WBSAlpha.Models;
 /*
 Modified By:    Quinn Helm
-Date:           27-11-2021
+Date:           01-12-2021
 */
 namespace WBSAlpha.Hubs
 {
@@ -32,7 +32,6 @@ namespace WBSAlpha.Hubs
         /// <summary>
         /// 
         /// </summary>
-        /// <returns></returns>
         public async Task SpawnChats()
         {
             try
@@ -52,7 +51,22 @@ namespace WBSAlpha.Hubs
         /// <summary>
         /// 
         /// </summary>
-        /// <returns></returns>
+        /// <param name="id"></param>
+        public async Task DisconnectUser(string id)
+        {
+            try
+            {
+                await Clients.User(id).SendAsync("Disconnect");
+            }
+            catch (Exception ex)
+            {
+                // should log when errors occur but idk how
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         public async Task UpdateUserList()
         {
             try
@@ -72,7 +86,6 @@ namespace WBSAlpha.Hubs
         /// </summary>
         /// <param name="join"></param>
         /// <param name="leave"></param>
-        /// <returns></returns>
         public async Task ChangeChats(int join, int leave, bool isPrivate, bool wasPrivate)
         {
             try
@@ -134,7 +147,6 @@ namespace WBSAlpha.Hubs
         /// </summary>
         /// <param name="id"></param>
         /// <param name="reason"></param>
-        /// <returns></returns>
         public async Task ReportMessage(int id, string reason)
         {
             try
@@ -161,7 +173,6 @@ namespace WBSAlpha.Hubs
         /// </summary>
         /// <param name="toUser"></param>
         /// <param name="message"></param>
-        /// <returns></returns>
         public async Task SendPrivateMessage(int toUser, string message)
         {
             if (!message.Equals(""))
@@ -210,7 +221,6 @@ namespace WBSAlpha.Hubs
         /// </summary>
         /// <param name="roomNumber"></param>
         /// <param name="message"></param>
-        /// <returns></returns>
         public async Task SendMessage(int roomNumber, string message)
         {
             if (!message.Equals(""))

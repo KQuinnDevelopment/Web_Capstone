@@ -14,7 +14,7 @@ namespace WBSAlpha.Models
         [Required]
         [DataType(DataType.Text)]
         [StringLength(45, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 4)]
-        [Display(Name = "Name")]
+        [Display(Name = "Chat Name")]
         public string ChatName { get; set; }
 
         [DataType(DataType.Text)]

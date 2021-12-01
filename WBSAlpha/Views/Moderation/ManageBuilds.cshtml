@@ -43,7 +43,7 @@
                             @Html.DisplayFor(modelItem => item.CreationDate)
                         </td>
                         <td>
-                            <a asp-controller="Games" asp-action="BuildDetails" asp-route-id="@item.BuildID">Details</a> |
+                            <a asp-controller="Games" asp-action="ViewBuild" asp-route-id="@item.BuildID">Details</a> |
                             <a asp-controller="Games" asp-action="DeleteBuild" asp-route-id="@item.BuildID">Delete</a>
                         </td>
                     </tr>

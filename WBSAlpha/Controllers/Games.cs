@@ -35,13 +35,39 @@ namespace WBSAlpha.Controllers
             return View();
         }
 
-        [AllowAnonymous]
-        public IActionResult BuildDetails()
+        public async Task<IActionResult> FindMyBuilds()
         {
+            var user = await _userManager.GetUserAsync(User);
+            if (user != null)
+            {
+                ViewBag.UserID = user.Id;
+            }
+            ViewBag.UserBuilds = true;
+            return View("Builds");
+        }
+
+        [AllowAnonymous]
+        public async Task<IActionResult> FindAllBuilds()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user != null)
+            {
+                ViewBag.UserID = user.Id;
+            }
+            else
+            {
+                ViewBag.UserId = "Anonymous";
+            }
+            ViewBag.UserBuilds = false;
             return View("Builds");
         }
 
         public IActionResult CreateBuild()
+        {
+            return View();
+        }
+
+        public IActionResult ViewBuild(int buildID)
         {
             return View();
         }
