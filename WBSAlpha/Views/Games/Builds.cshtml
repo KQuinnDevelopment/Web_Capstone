@@ -50,7 +50,6 @@
                         </td>
                         <td>
                             <a asp-action="ViewBuild" asp-route-id="@item.BuildID">Details</a> |
-                            <a asp-action="EditBuild" asp-route-id="@item.BuildID">Edit</a> |
                             <a asp-action="DeleteBuild" asp-route-id="@item.BuildID">Delete</a>
                         </td>
                     </tr>
@@ -75,7 +74,6 @@
                         <a asp-action="ViewBuild" asp-route-id="@item.BuildID">Details</a>
                         @if (ViewBag.UserID == item.UserID)
                         {
-                            <a asp-action="EditBuild" asp-route-id="@item.BuildID">Edit</a>
                             <a asp-action="DeleteBuild" asp-route-id="@item.BuildID">Delete</a>
                         }
                     </td>

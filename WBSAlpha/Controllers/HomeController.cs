@@ -5,7 +5,7 @@ using System.Diagnostics;
 using WBSAlpha.Models;
 /*
 Modified By:    Quinn Helm
-Date:           27-11-2021
+Date:           01-12-2021
 */
 namespace WBSAlpha.Controllers
 {
@@ -19,16 +19,25 @@ namespace WBSAlpha.Controllers
             _logger = logger;
         }
 
+        /// <summary>
+        /// Default home view.
+        /// </summary>
         public IActionResult Index()
         {
             return View();
         }
 
+        /// <summary>
+        /// About the Company view.
+        /// </summary>
         public IActionResult About()
         {
             return View();
         }
 
+        /// <summary>
+        /// Privacy policy goes here should it be updated.
+        /// </summary>
         public IActionResult Privacy()
         {
             return View();

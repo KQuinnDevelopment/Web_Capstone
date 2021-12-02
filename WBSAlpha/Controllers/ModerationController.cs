@@ -12,7 +12,7 @@ using WBSAlpha.Hubs;
 using WBSAlpha.Models;
 /*
 Modified By:    Quinn Helm
-Date:           29-11-2021
+Date:           01-12-2021
 */
 namespace WBSAlpha.Controllers
 {
@@ -25,7 +25,8 @@ namespace WBSAlpha.Controllers
 
         [BindProperty]
         public ChatInput ChatroomInput { get; set; }
-
+        [BindProperty]
+        public SearchInput ChatSearch { get; set; }
 
         public ModerationController(UserManager<CoreUser> manager, ApplicationDbContext context, ChatHub hub)
         {
@@ -34,20 +35,28 @@ namespace WBSAlpha.Controllers
             _activeChat = hub;
         }
 
-        // Get: ModerationController
+        /// <summary>
+        /// In the event that the index method is called, default to the Reports view.
+        /// </summary>
+        /// <returns></returns>
         public ActionResult Index()
         {
-            // force it to default to the metrics view
-            return View("Metrics");
+            // force it to default to the Reports view
+            return View("Reports");
         }
 
-        // GET: ModerationController/Metrics
+        /// <summary>
+        /// Allow the moderator+ to view available metrics.
+        /// </summary>
         public ActionResult Metrics()
         {
             return View();
         }
 
         // manage reports
+        /// <summary>
+        /// Returns a view that allows moderators+ to see a list of reports that have yet to be responded to.
+        /// </summary>
         public async Task<ActionResult> Reports()
         {
             Report[] reports = _dbContext.Reports.Where(r => r.RespondedTo == false)
@@ -62,16 +71,22 @@ namespace WBSAlpha.Controllers
                 messages[i] = list[i].Content;
                 userIds[i] = list[i].SentFromUser;
             }
+            CoreUser u;
             for (int i = 0; i < userIds.Length; i++)
             {
-                userNames[i] = _dbContext.Users.FindAsync(userIds[i]).Result.UserName;
+                u = await _dbContext.Users.FindAsync(userIds[i]);
+                userNames[i] = u.UserName;
             }
             ViewData["ActiveReports"] = reports;
             ViewData["RudeMessages"] = messages;
             ViewData["ReportedNames"] = userNames;
             return View("Reports");
         }
-
+        /// <summary>
+        /// If this report is not justified, acknowledge its existence but do not punish
+        /// the user who sent the offending message and mark it as responded to.
+        /// </summary>
+        /// <param name="id">ID of Report to ignore.</param>
         public async Task<ActionResult> IgnoreReport(int id)
         {
             Report report = await _dbContext.Reports.FindAsync(id);
@@ -118,13 +133,147 @@ namespace WBSAlpha.Controllers
         }
 
         // manage chat history
-
-        public ActionResult ChatHistory()
+        /// <summary>
+        /// Allows a moderator+ to view the last 200 messages from the first available chatroom.
+        /// This is called the first time a user looks at the chat history.
+        /// </summary>
+        public async Task<ActionResult> ChatHistory()
         {
+            List<Chatroom> rooms = _dbContext.Chatrooms.ToList();
+            List<Message> messages = _dbContext.Messages.Where(m => m.ChatID == 1)
+                .TakeLast(200).ToList();
+            messages.TrimExcess();
+            string[] userNames = new string[messages.Count];
+            for (int i = 0; i < messages.Count; i++)
+            {
+                CoreUser u = await _dbContext.Users.FindAsync(messages[i].SentFromUser);
+                userNames[i] = u.UserName;
+            }
+            ViewData["Chats"] = rooms;
+            ViewData["Messages"] = messages.ToArray();
+            ViewData["UserNames"] = userNames;
             return View();
+        }
+        /// <summary>
+        /// Allows a moderator+ to view the last 200 messages from a given chatroom.
+        /// </summary>
+        /// <param name="id">Chatroom ID to filter to.</param>
+        public async Task<ActionResult> ChatHistory(int id)
+        {
+            List<Chatroom> rooms = _dbContext.Chatrooms.ToList();
+            List<Message> messages = _dbContext.Messages.Where(m => m.ChatID == id)
+                .TakeLast(200).ToList();
+            string[] userNames = new string[messages.Count];
+            for (int i = 0; i < messages.Count; i++)
+            {
+                CoreUser u = await _dbContext.Users.FindAsync(messages[i].SentFromUser);
+                userNames[i] = u.UserName;
+            }
+            ViewData["Chats"] = rooms;
+            ViewData["Messages"] = messages.ToArray();
+            ViewData["UserNames"] = userNames;
+            return View();
+        }
+        /// <summary>
+        /// Search the given chatroom for messages that fit the desired filter.
+        /// </summary>
+        /// <param name="id">Chat ID to filter into.</param>
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<ActionResult> SearchHistory(int id)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    return View("ChatHistory");
+                }
+                List<Message> messages;
+                if (ChatSearch.On != null)
+                {
+                    DateTime check = new DateTime(ChatSearch.On.Value.Year, 
+                        ChatSearch.On.Value.Month, ChatSearch.On.Value.Day);
+                    // ensure this gets priority over any other search type
+                    ChatSearch.Before = null;
+                    ChatSearch.After = null;
+                    messages = _dbContext.Messages.Where(m => m.ChatID == id)
+                        .Where(m => m.Timestamp == check).ToList();
+                } else
+                {
+                    if (ChatSearch.Before != null && ChatSearch.After != null)
+                    {
+                        DateTime checkAfter = new DateTime(ChatSearch.After.Value.Year,
+                        ChatSearch.After.Value.Month, ChatSearch.After.Value.Day);
+                        DateTime checkBefore = new DateTime(ChatSearch.Before.Value.Year,
+                        ChatSearch.Before.Value.Month, ChatSearch.Before.Value.Day);
+
+                        messages = _dbContext.Messages.Where(m => m.ChatID == id)
+                        .Where(m => m.Timestamp >= checkAfter).Where(m => m.Timestamp <= checkBefore).ToList();
+                    } 
+                    else if (ChatSearch.After != null)
+                    {
+                        DateTime checkAfter = new DateTime(ChatSearch.After.Value.Year,
+                        ChatSearch.After.Value.Month, ChatSearch.After.Value.Day);
+
+                        messages = _dbContext.Messages.Where(m => m.ChatID == id)
+                        .Where(m => m.Timestamp >= checkAfter).ToList();
+                    }
+                    else if (ChatSearch.Before != null)
+                    {
+                        DateTime checkBefore = new DateTime(ChatSearch.Before.Value.Year,
+                        ChatSearch.Before.Value.Month, ChatSearch.Before.Value.Day);
+
+                        messages = _dbContext.Messages.Where(m => m.ChatID == id)
+                        .Where(m => m.Timestamp <= checkBefore).ToList();
+                    } else
+                    {
+                        messages = _dbContext.Messages.Where(m => m.ChatID == id).TakeLast(200).ToList();
+                    }
+                }
+                if (messages == null)
+                {
+                    messages = new List<Message>(0);
+                }
+                else
+                {
+                    messages.TrimExcess(); // just in case
+                }
+                List<Chatroom> rooms = _dbContext.Chatrooms.ToList();
+                string[] userNames = new string[messages.Count];
+                for (int i = 0; i < messages.Count; i++)
+                {
+                    CoreUser u = await _dbContext.Users.FindAsync(messages[i].SentFromUser);
+                    userNames[i] = u.UserName;
+                }
+                ViewData["Chats"] = rooms;
+                ViewData["Messages"] = messages.ToArray();
+                ViewData["UserNames"] = userNames;
+                return RedirectToAction("ChatHistory");
+            }
+            catch
+            {
+                return View("ChatHistory");
+            }
+        }
+        public class SearchInput
+        {
+            [DataType(DataType.DateTime)]
+            [Display(Name = "On Date")]
+            public DateTime? On { get; set; }
+
+            [DataType(DataType.DateTime)]
+            [Display(Name = "Before Date")]
+            public DateTime? Before { get; set; }
+
+            [DataType(DataType.DateTime)]
+            [Display(Name = "After Date")]
+            public DateTime? After { get; set; }
         }
 
         // manage user bans
+        /// <summary>
+        /// Provides a view to an administrator of a list of users worthy of being banned from chat.
+        /// </summary>
         [Authorize(Roles = "Administrator")]
         public ActionResult ManageBans()
         {
@@ -143,7 +292,6 @@ namespace WBSAlpha.Controllers
             List<string> reasons = new List<string>(messages.Count);
             Report outReport;
             Message outMessage;
-            string outString;
             foreach (CoreUser user in rudeUsers)
             {
                 outMessage = messages.FirstOrDefault(m => m.SentFromUser == user.Id);
@@ -201,6 +349,11 @@ namespace WBSAlpha.Controllers
         }
 
         // manage moderators
+        /// <summary>
+        /// Provides a view to an administrator that allows them to promote and demote users 
+        /// to and from the Moderator role. Moderators will continue to have moderation 
+        /// privileges until their cookie expires.
+        /// </summary>
         [Authorize(Roles = "Administrator")]
         public async Task<ActionResult> ManageModerators()
         {
@@ -234,7 +387,7 @@ namespace WBSAlpha.Controllers
         /// <summary>
         /// Attempts to demote a given user from moderator if they are a moderator.
         /// </summary>
-        /// <param name="id"></param>
+        /// <param name="id">ID of user to demote from moderator role.</param>
         public async Task<ActionResult> DemoteUser(string id)
         {
             var demotedUser = await _userManager.FindByIdAsync(id);
@@ -249,6 +402,9 @@ namespace WBSAlpha.Controllers
         }
 
         // manage chatrooms
+        /// <summary>
+        /// Provides a view to an administrator that allows them to add or remove a chatroom.
+        /// </summary>
         [Authorize(Roles = "Administrator")]
         public ActionResult ManageChatrooms()
         {
@@ -311,7 +467,7 @@ namespace WBSAlpha.Controllers
             [DataType(DataType.Text)]
             [StringLength(90, ErrorMessage = "The {0} must be at max {1} characters long.")]
             [Display(Name = "Description")]
-            public string? Description { get; set; }
+            public string Description { get; set; }
         }
 
         // manage builds -- other build methods are in games controller
@@ -319,63 +475,6 @@ namespace WBSAlpha.Controllers
         public ActionResult ManageBuilds()
         {
             return View();
-        }
-
-        // POST: ModerationController/Create
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Create(IFormCollection collection)
-        {
-            try
-            {
-                return RedirectToAction(nameof(Index));
-            }
-            catch
-            {
-                return View();
-            }
-        }
-
-        // GET: ModerationController/Edit/5
-        public ActionResult Edit(int id)
-        {
-            return View();
-        }
-
-        // POST: ModerationController/Edit/5
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Edit(int id, IFormCollection collection)
-        {
-            try
-            {
-                return RedirectToAction(nameof(Index));
-            }
-            catch
-            {
-                return View();
-            }
-        }
-
-        // GET: ModerationController/Delete/5
-        public ActionResult Delete(int id)
-        {
-            return View();
-        }
-
-        // POST: ModerationController/Delete/5
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Delete(int id, IFormCollection collection)
-        {
-            try
-            {
-                return RedirectToAction(nameof(Index));
-            }
-            catch
-            {
-                return View();
-            }
         }
     }
 }

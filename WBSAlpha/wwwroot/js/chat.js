@@ -20,7 +20,7 @@ connection.on("ReceiveMessage", function (user, time, message, messageID) {
         event.preventDefault();
     });
     document.getElementById("chatBox").appendChild(li);
-    li.textContent = `${user} - ${time}: ${message}`;
+    li.textContent = `${user} - ${time}: ${rebuildString(message)}`;
     li.appendChild(a);
 });
 connection.on("ReceivePrivateMessage", function (user, time, message, messageID, key) {
@@ -43,10 +43,25 @@ connection.on("ReceivePrivateMessage", function (user, time, message, messageID,
             event.preventDefault();
         });
         document.getElementById("chatBox").appendChild(li);
-        li.textContent = `${user} - ${time}: ${message}`;
+        li.textContent = `${user} - ${time}: ${rebuildString(message)}`;
         li.appendChild(a);
     }
 });
+// ensure that any malicious code cannot run on user end
+function rebuildString(string) {
+    // taken from https://stackoverflow.com/a/48226843
+    const mapper = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#x27;',
+        "/": '&#x2F;',
+        "`": '&grave;'
+    };
+    const expression = /[&<>"'/`]/ig;
+    return string.replace(expression, (match) => (mapper[match]));
+}
 
 // need to be able to add rooms programmatically on first entering
 function swapRoom(id, isPrivate) {

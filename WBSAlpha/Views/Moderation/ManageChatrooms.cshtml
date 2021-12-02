@@ -9,7 +9,7 @@
 
     <partial name="~/Views/Shared/_ModerationNavigation.cshtml" />
     <div class="container mh-100" style="height: 75vh; border: 2px solid black; overflow-y: scroll;">
-        <table class="table">
+        <table class="table row">
             <thead>
                 <tr>
                     <th>Chatroom Name</th>
@@ -30,7 +30,7 @@
                 }
             </tbody>
         </table>
-        <form asp-controller="Moderation" asp-action="AddChatroom" method="post">
+        <form asp-controller="Moderation" asp-action="AddChatroom" method="post" class="row">
             <div asp-validation-summary="All" class="text-danger"></div>
             <div class="form-group">
                 <label asp-for="Name"></label>

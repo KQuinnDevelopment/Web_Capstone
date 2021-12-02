@@ -1,9 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.AspNetCore.SignalR;
-using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -30,7 +26,7 @@ namespace WBSAlpha.Hubs
         }
         
         /// <summary>
-        /// 
+        /// Ensure that the user's client has access to every available chatroom.
         /// </summary>
         public async Task SpawnChats()
         {
@@ -49,9 +45,10 @@ namespace WBSAlpha.Hubs
         }
 
         /// <summary>
-        /// 
+        /// In the event that it is necessary (such as with a kick/ban), disconnect
+        /// the given user.
         /// </summary>
-        /// <param name="id"></param>
+        /// <param name="id">ID of user to kick from chat.</param>
         public async Task DisconnectUser(string id)
         {
             try
@@ -65,7 +62,7 @@ namespace WBSAlpha.Hubs
         }
 
         /// <summary>
-        /// 
+        /// When a user enters the chatroom, add them to every user's client.
         /// </summary>
         public async Task UpdateUserList()
         {
@@ -82,10 +79,12 @@ namespace WBSAlpha.Hubs
         }
 
         /// <summary>
-        /// 
+        /// Allows the user to swap what chatroom they are in at a given time.
         /// </summary>
-        /// <param name="join"></param>
-        /// <param name="leave"></param>
+        /// <param name="join">ID of the chatroom the user is entering.</param>
+        /// <param name="leave">ID of the chatroom the user is leaving.</param>
+        /// <param name="isPrivate">Whether the chat the user is entering is private.</param>
+        /// <param name="wasPrivate">Whether the chat the user is leaving was private.</param>
         public async Task ChangeChats(int join, int leave, bool isPrivate, bool wasPrivate)
         {
             try
@@ -143,10 +142,10 @@ namespace WBSAlpha.Hubs
         }
 
         /// <summary>
-        /// 
+        /// Attempt to create a report for the given message.
         /// </summary>
-        /// <param name="id"></param>
-        /// <param name="reason"></param>
+        /// <param name="id">ID of message to report.</param>
+        /// <param name="reason">Justification for report.</param>
         public async Task ReportMessage(int id, string reason)
         {
             try
@@ -169,10 +168,10 @@ namespace WBSAlpha.Hubs
         }
 
         /// <summary>
-        /// 
+        /// Attempt to send a message privately -- from one user to another, in their own room.
         /// </summary>
-        /// <param name="toUser"></param>
-        /// <param name="message"></param>
+        /// <param name="toUser">Standing of the user in question.</param>
+        /// <param name="message">Message to send privately.</param>
         public async Task SendPrivateMessage(int toUser, string message)
         {
             if (!message.Equals(""))
@@ -217,10 +216,10 @@ namespace WBSAlpha.Hubs
         }
 
         /// <summary>
-        /// 
+        /// Attempt to send a message to the given chatroom.
         /// </summary>
-        /// <param name="roomNumber"></param>
-        /// <param name="message"></param>
+        /// <param name="roomNumber">ID of the room to send a message into.</param>
+        /// <param name="message">Message to send to the chat.</param>
         public async Task SendMessage(int roomNumber, string message)
         {
             if (!message.Equals(""))

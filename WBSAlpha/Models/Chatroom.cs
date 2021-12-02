@@ -20,6 +20,6 @@ namespace WBSAlpha.Models
         [DataType(DataType.Text)]
         [StringLength(90, ErrorMessage = "The {0} must be at max {1} characters long.")]
         [Display(Name = "Description")]
-        public string? Description { get; set; }
+        public string Description { get; set; }
     }
 }

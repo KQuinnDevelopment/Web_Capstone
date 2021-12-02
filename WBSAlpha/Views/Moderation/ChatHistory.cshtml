@@ -1,12 +1,54 @@
 ﻿@page
+@model WBSAlpha.Controllers.ModerationController.SearchInput
+@{ 
+    ViewData["Title"] = "View Chat History";
+    List<Chatroom> chats = (List<Chatroom>)ViewData["Chats"];
+    string[] userNames = (string[])ViewData["UserNames"];
+    Message[] messages = (Message[])ViewData["Messages"];
+}
 <div>
+    <h1>@ViewData["Title"]</h1>
+
     <partial name="~/Views/Shared/_ModerationNavigation.cshtml" />
     <div class="container mh-100" style="height: 75vh; border:2px solid black;">
-        <form>
-
+        <div class="row btn-group">
+            @foreach (Chatroom chat in chats)
+            {
+                <button class="btn btn-outline-dark text-dark" id="@chat.ChatID">@chat.ChatName</button>
+            }
+        </div>
+        <form asp-controller="Moderation" asp-action="SearchHistory" method="post" class="row">
+            <div class="form-group">
+                <label asp-for="On"></label>
+                <input asp-for="On" type="date" class="form-control" />
+                <label>(Between)</label>
+                <label asp-for="After"></label>
+                <input asp-for="After" type="date" class="form-control" />
+                <label asp-for="Before"></label>
+                <input asp-for="Before" type="date" class="form-control" />
+                <button type="submit">Submit Search</button>
+            </div>
         </form>
-        <table>
-
-        </table>
+        <div class="row" style="overflow-y: scroll;">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>User Name</th>
+                        <th>Timestamp</th>
+                        <th>Message</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (int i = 0; i < messages.Length; i++)
+                    {
+                        <tr>
+                            <th>@userNames[i]</th>
+                            <th>@messages[i].Timestamp</th>
+                            <th>@messages[i].Content</th>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
