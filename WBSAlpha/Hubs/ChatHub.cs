@@ -35,7 +35,7 @@ namespace WBSAlpha.Hubs
                 List<Chatroom> availableChats = _dbContext.Chatrooms.ToList();
                 foreach (Chatroom room in availableChats)
                 {
-                    await Clients.User(Context.ConnectionId).SendAsync("AddChatroom", room.ChatID, room.ChatName);
+                    await Clients.User(Context.UserIdentifier).SendAsync("AddChatroom", room.ChatID, room.ChatName);
                 }
             } 
             catch (Exception ex)
@@ -68,7 +68,7 @@ namespace WBSAlpha.Hubs
         {
             try
             {
-                CoreUser newUser = _dbContext.Users.FindAsync(Context.ConnectionId).Result;
+                CoreUser newUser = await _dbContext.Users.FindAsync(Context.UserIdentifier);
                 await Clients.All.SendAsync("AddNewUser", newUser.StandingID, 
                     newUser.NormalizedUserName, (Context.User.IsInRole("Moderator") || Context.User.IsInRole("Admin")));
             } 
@@ -91,7 +91,7 @@ namespace WBSAlpha.Hubs
             {
                 if (isPrivate)
                 {
-                    CoreUser myself = _dbContext.Users.FindAsync(Context.ConnectionId).Result;
+                    CoreUser myself = _dbContext.Users.FindAsync(Context.UserIdentifier).Result;
                     CoreUser other = _dbContext.Users.FirstOrDefault(u => u.StandingID == join);
 
                     if (!wasPrivate)
@@ -99,17 +99,17 @@ namespace WBSAlpha.Hubs
                         Chatroom exit = _dbContext.Chatrooms.FirstOrDefault(c => c.ChatID == leave);
                         if (exit != null)
                         {
-                            await Groups.RemoveFromGroupAsync(Context.ConnectionId, exit.ChatName);
+                            await Groups.RemoveFromGroupAsync(Context.UserIdentifier, exit.ChatName);
                         }
                     }
 
-                    List<Message> sinceLogin = _dbContext.Messages.Where(m => m.SentFromUser == Context.ConnectionId
+                    List<Message> sinceLogin = _dbContext.Messages.Where(m => m.SentFromUser == Context.UserIdentifier
                             || m.SentFromUser == other.Id).Where(m => m.Timestamp >= _logonTime).ToList();
                     string from = "";
                     foreach (Message m in sinceLogin)
                     {
                         from = _dbContext.Users.FindAsync(m.SentFromUser).Result.NormalizedUserName;
-                        await Clients.User(Context.ConnectionId).SendAsync("ReceivePrivateMessage", from, m.Timestamp, m.Content, m.MessageID, join);
+                        await Clients.User(Context.UserIdentifier).SendAsync("ReceivePrivateMessage", from, m.Timestamp, m.Content, m.MessageID, join);
                     }
                 } 
                 else
@@ -118,8 +118,8 @@ namespace WBSAlpha.Hubs
                     Chatroom exit = _dbContext.Chatrooms.FirstOrDefault(c => c.ChatID == leave);
                     if (chat != null && exit != null)
                     {
-                        await Groups.AddToGroupAsync(Context.ConnectionId, chat.ChatName);
-                        await Groups.RemoveFromGroupAsync(Context.ConnectionId, exit.ChatName);
+                        await Groups.AddToGroupAsync(Context.UserIdentifier, chat.ChatName);
+                        await Groups.RemoveFromGroupAsync(Context.UserIdentifier, exit.ChatName);
                     }
                     // collect last 10 messages that were sent while user was online, send to user
                     List<Message> sinceLogin = _dbContext.Messages.Where(m => m.ChatID == chat.ChatID)
@@ -129,11 +129,11 @@ namespace WBSAlpha.Hubs
                     foreach (Message m in sinceLogin)
                     {
                         from = _dbContext.Users.FindAsync(m.SentFromUser).Result.NormalizedUserName;
-                        await Clients.User(Context.ConnectionId).SendAsync("ReceiveMessage", from, DateTime.Now, m.Content, m.MessageID);
+                        await Clients.User(Context.UserIdentifier).SendAsync("ReceiveMessage", from, DateTime.Now, m.Content, m.MessageID);
                     }
                 }
                 // this way the user can only start sending messages again at the end of having their chat set up
-                await Clients.User(Context.ConnectionId).SendAsync("GetNewRoom", join, isPrivate);
+                await Clients.User(Context.UserIdentifier).SendAsync("GetNewRoom", join, isPrivate);
             } 
             catch (Exception ex)
             {
@@ -207,7 +207,7 @@ namespace WBSAlpha.Hubs
                 // send the message to just the two users
                 if (messageID > -1)
                 {
-                    await Clients.User(Context.ConnectionId).SendAsync("ReceivePrivateMessage", 
+                    await Clients.User(Context.UserIdentifier).SendAsync("ReceivePrivateMessage", 
                         from, time, message, messageID, outKey);
                     await Clients.User(to).SendAsync("ReceivePrivateMessage",
                         from, time, message, messageID, fKey);

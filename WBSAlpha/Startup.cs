@@ -6,15 +6,13 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using System;
-using System.Threading.Tasks;
 using WBSAlpha.Authorization;
 using WBSAlpha.Data;
 using WBSAlpha.Hubs;
 using WBSAlpha.Models;
 /*
 Modified By:    Quinn Helm
-Date:           27-11-2021
+Date:           02-12-2021
 */
 namespace WBSAlpha
 {
@@ -64,7 +62,7 @@ namespace WBSAlpha
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IServiceProvider serviceProvider)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             if (env.IsDevelopment())
             {
@@ -93,26 +91,6 @@ namespace WBSAlpha
                 endpoints.MapRazorPages();
                 endpoints.MapHub<ChatHub>("/Chathub");
             });
-
-            CreateRoles(serviceProvider);
-        }
-
-        private void CreateRoles(IServiceProvider serviceProvider)
-        {
-            // inspired by https://stackoverflow.com/a/45219021
-            var _roleManager = serviceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-            var _userManager = serviceProvider.GetRequiredService<UserManager<CoreUser>>();
-            string[] importantRoles = { "Administrator", "Moderator" };
-            Task<IdentityResult> roleResult;
-            foreach (var role in importantRoles)
-            {
-                Task<bool> exists = _roleManager.RoleExistsAsync(role);
-                if (!exists.Result)
-                {
-                    roleResult = _roleManager.CreateAsync(new IdentityRole(role));
-                    roleResult.Wait();
-                }
-            }
         }
     }
 }
