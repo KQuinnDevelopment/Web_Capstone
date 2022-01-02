@@ -15,7 +15,7 @@ using WBSAlpha.Data;
 using WBSAlpha.Models;
 /*
 Modified By:    Quinn Helm
-Date:           27-11-2021
+Date:           02-12-2021
 */
 namespace WBSAlpha.Areas.Identity.Pages.Account
 {
@@ -59,7 +59,7 @@ namespace WBSAlpha.Areas.Identity.Pages.Account
             public string UserName { get; set; }
 
             [Required]
-            [DataType(DataType.DateTime)]
+            [DataType(DataType.Date)]
             [Display(Name = "Date of Birth")]
             [DisplayFormat(DataFormatString = "{0:yyyy - MM - dd}", ApplyFormatInEditMode = true)]
             public DateTime Age { get; set; }
@@ -137,11 +137,11 @@ namespace WBSAlpha.Areas.Identity.Pages.Account
 
             if (ModelState.IsValid)
             {
-                Standing uStanding = new Standing();
+                Standing uStanding = new();
                 await _dbContext.Standings.AddAsync(uStanding);
                 await _dbContext.SaveChangesAsync();
                 DateTime createdOn = DateTime.Now;
-                DateTime age = new DateTime(Input.Age.Year, Input.Age.Month, Input.Age.Day);
+                DateTime age = new(Input.Age.Year, Input.Age.Month, Input.Age.Day);
                 var user = new CoreUser { UserName = Input.UserName, Email = Input.Email, Age = age, Created = createdOn, StandingID = uStanding.StandingID };
                 if (Input.UserName.Equals(""))
                 {
@@ -161,7 +161,7 @@ namespace WBSAlpha.Areas.Identity.Pages.Account
                         var callbackUrl = Url.Page(
                             "/Account/ConfirmEmail",
                             pageHandler: null,
-                            values: new { area = "Identity", userId = userId, code = code },
+                            values: new { area = "Identity", userId, code },
                             protocol: Request.Scheme);
 
                         await _emailSender.SendEmailAsync(Input.Email, "Confirm your email",

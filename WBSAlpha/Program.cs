@@ -8,7 +8,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using WBSAlpha.Data;
-
+using WBSAlpha.Models;
+/*
+Modified By:    Quinn Helm
+Date:           20-12-2021
+*/
 namespace WBSAlpha
 {
     public class Program
@@ -20,11 +24,12 @@ namespace WBSAlpha
             var hosting = host.Services.GetService<IWebHostEnvironment>();
             if (hosting.IsDevelopment())
             {
-                DbStart.PW = config.GetSection("TestSpecial").GetValue<string>("Password");
+                DbStart.PW = config.GetSection("SeedingAccounts").Get<AppSecrets>();
             }
             using (var scope = host.Services.CreateScope())
             {
                 DbStart.SeedRolesAndUsers(scope.ServiceProvider).Wait();
+                DbStart.SeedWeaponsAndRunes(scope.ServiceProvider).Wait();
             }
             host.Run();
         }

@@ -1,12 +1,16 @@
-﻿@page
-@{
-    ViewData["Title"] = "Metrics";
-}
-<div>
-    <h1>@ViewData["Title"]</h1>
+﻿<div>
+    <h1 class="mx-auto p-2 text-center">@ViewData["Title"]</h1>
 
     <partial name="~/Views/Shared/_ModerationNavigation.cshtml" />
-    <div class="container mh-100" style="height: 75vh; border:2px solid black;">
-        <div class="row"><p>content goes here...</p></div>
+    <div class="container mh-100" style="height: 65vh; border:2px solid black;">
+        <div class="row mx-auto p-2 text-center align-center">
+            <p>Number of unique users today: @ViewData["UserCount"]</p>
+        </div>
+        <div class="row mx-auto p-2 text-center align-center">
+            <p>Number of messages sent today: @ViewData["MessageCount"]</p>
+        </div>
+        <div class="row mx-auto p-2 text-center align-center">
+            <p>Number of reports generated today: @ViewData["ReportsCount"]</p>
+        </div>
     </div>
 </div>

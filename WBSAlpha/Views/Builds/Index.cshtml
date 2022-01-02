@@ -1,0 +1,62 @@
+﻿@model IEnumerable<WBSAlpha.Models.GameOneBuild>
+
+@{
+    ViewData["Title"] = "Index";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    string active = (string)ViewData["ActiveUser"];
+}
+
+<h1 class="mx-auto text-center p-2">Builds</h1>
+<p class="mx-auto text-center p-1">
+    <a class="btn btn-outline-dark" asp-action="Create">Create New</a>
+</p>
+<form method="post" class="text-center" asp-action="Search">
+    <div class="form-row mx-auto">
+        <div class="col-2 offset-2 align-middle">
+            <label class="control-label mx-auto">Filter</label>
+        </div>
+        <div class="col-4">
+            <input id="SearchText" type="text" maxlength="30" class="form-control mx-auto" />
+        </div>
+        <div class="col-1">
+            <button type="submit" class="btn btn-info">Search</button>
+        </div>
+    </div>
+</form>
+<br />
+<table class="table mx-auto">
+    <thead>
+        <tr>
+            <th class="mx-auto text-center">@Html.ActionLink("Build Name", "Index", new { sorting = ViewBag.NameSort })</th>
+            <th class="mx-auto text-center">Description</th>
+            <th class="mx-auto text-center">@Html.ActionLink("Rating", "Index", new { sorting = ViewBag.RatingSort })</th>
+            <th class="mx-auto text-center"></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td class="mx-auto text-center">
+                    <a asp-action="Details" asp-route-id="@item.BuildID">@Html.DisplayFor(modelItem => item.BuildName)</a>
+                </td>
+                <td class="mx-auto text-center">
+                    @Html.DisplayFor(modelItem => item.Description)
+                </td>
+                <td class="mx-auto text-center">
+                    <a asp-action="Details" asp-route-id="@item.BuildID">@Html.DisplayFor(modelItem => item.Rating)</a>
+                </td>
+                <td class="mx-auto text-center">
+                    @{
+                        <a asp-action="Details" asp-route-id="@item.BuildID">Details</a>
+                        if (active.Equals(item.UserID) || User.IsInRole("Administrator"))
+                        {
+                            <span> | </span>
+                            <a asp-action="Delete" asp-route-id="@item.BuildID">Delete</a>
+                        }
+                    }
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

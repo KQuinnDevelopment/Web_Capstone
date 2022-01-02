@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 using WBSAlpha.Models;
 /*
 Modified By:    Quinn Helm
-Date:           17-10-2021
+Date:           02-12-2021
 */
 namespace WBSAlpha.Areas.Identity.Pages.Account
 {
@@ -44,8 +44,10 @@ namespace WBSAlpha.Areas.Identity.Pages.Account
         public class InputModel
         {
             [Required]
-            [Display(Name = "Email")]
-            public string Email { get; set; }
+            [Display(Name = "User Name")]
+            [StringLength(45, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 3)]
+            [RegularExpression(@"^[0-9a-zA-Z]{1,45}$", ErrorMessage = "Invalid Characters")]
+            public string UserName { get; set; }
 
             [Required]
             [DataType(DataType.Password)]
@@ -80,7 +82,7 @@ namespace WBSAlpha.Areas.Identity.Pages.Account
             {
                 // This doesn't count login failures towards account lockout
                 // To enable password failures to trigger account lockout, set lockoutOnFailure: true
-                var result = await _signInManager.PasswordSignInAsync(Input.Email, Input.Password, Input.RememberMe, lockoutOnFailure: false);
+                var result = await _signInManager.PasswordSignInAsync(Input.UserName, Input.Password, Input.RememberMe, lockoutOnFailure: false);
                 if (result.Succeeded)
                 {
                     _logger.LogInformation("User logged in.");
@@ -103,6 +105,8 @@ namespace WBSAlpha.Areas.Identity.Pages.Account
             }
 
             // If we got this far, something failed, redisplay form
+            ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
+
             return Page();
         }
     }

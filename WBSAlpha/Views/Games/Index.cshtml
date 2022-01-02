@@ -2,15 +2,17 @@
     ViewData["Title"] = "Games";
 }
 <div class="text-center">
-    <h1>@ViewData["Title"]</h1>
+    <h1 class="mx-auto p-2 text-center">@ViewData["Title"]</h1>
     <p>This is where information about our completed products will go.</p>
+    <br />
+    <p>Interested in creating an item build? <a class="text-info" asp-controller="Builds" asp-action="Index">Try It Out!</a></p>
     <br />
     <br />
     <h1>Upcoming Games</h1>
+    <br />
     <!-- logo goes here -->
     <h3>Project SB:Alpha</h3>
     <p>This is a working title for our low poly, roguelike tactics game.</p>
     <p>Set in a fantasy universe, this game follows our protagonist as they seek to track down their prior captor.</p>
     <!-- character art goes here -->
-    <p>Interested in creating an item build? <a class="text-dark" asp-area="" asp-controller="Games" asp-action="Builds">Try It Out!</a></p>
 </div>

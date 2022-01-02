@@ -1,9 +1,8 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 /*
 Modified By:    Quinn Helm
-Date:           27-11-2021
+Date:           03-12-2021
 */
 namespace WBSAlpha.Models
 {
@@ -23,6 +22,9 @@ namespace WBSAlpha.Models
 
         [Display(Name = "Total Times Kicked")]
         public int KickTotal { get; set; }
+
+        [Display(Name = "Report ID")]
+        public int Justification { get; set; }
 
         [Display(Name = "Recent Bans")]
         public int BanCount { get; set; }

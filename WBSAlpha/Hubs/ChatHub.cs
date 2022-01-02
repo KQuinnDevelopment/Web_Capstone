@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,135 +10,88 @@ using WBSAlpha.Data;
 using WBSAlpha.Models;
 /*
 Modified By:    Quinn Helm
-Date:           01-12-2021
+Date:           03-12-2021
 */
 namespace WBSAlpha.Hubs
 {
     [Authorize]
     public class ChatHub : Hub
     {
+        private readonly ILogger<ChatHub> _logging;
         private readonly ApplicationDbContext _dbContext;
-        private DateTime _logonTime; // so that chatrooms can be populated according to login
+        private readonly DateTime _today; // so that chatrooms can be populated according to login
 
-        public ChatHub(ApplicationDbContext context)
+        public ChatHub(ApplicationDbContext context, ILogger<ChatHub> logger)
         {
             _dbContext = context;
-            _logonTime = DateTime.Now;
+            _logging = logger;
+            _today = DateTime.Now;
         }
         
-        /// <summary>
-        /// Ensure that the user's client has access to every available chatroom.
-        /// </summary>
-        public async Task SpawnChats()
+        public override async Task OnConnectedAsync()
         {
-            try
-            {
-                List<Chatroom> availableChats = _dbContext.Chatrooms.ToList();
-                foreach (Chatroom room in availableChats)
-                {
-                    await Clients.User(Context.UserIdentifier).SendAsync("AddChatroom", room.ChatID, room.ChatName);
-                }
-            } 
-            catch (Exception ex)
-            {
-                // should log when errors occur but idk how
-            }
+            await UpdateChats();
+            await UpdateUserList();
+            await Clients.Caller.SendAsync("ReceiveMessage", new 
+            { 
+                name = "System", 
+                message = "Welcome!",
+                time = DateTime.Now.ToShortDateString(),
+                mId = -1,
+            });
+            await base.OnConnectedAsync();
         }
 
         /// <summary>
-        /// In the event that it is necessary (such as with a kick/ban), disconnect
-        /// the given user.
+        /// Attempt to send a message to the given chatroom.
         /// </summary>
-        /// <param name="id">ID of user to kick from chat.</param>
-        public async Task DisconnectUser(string id)
+        /// <param name="roomNumber">ID of the room to send a message into.</param>
+        /// <param name="message">Message to send to the chat.</param>
+        public async Task SendMessage(int roomNumber, string message)
         {
-            try
+            if (!message.Equals(""))
             {
-                await Clients.User(id).SendAsync("Disconnect");
-            }
-            catch (Exception ex)
-            {
-                // should log when errors occur but idk how
-            }
-        }
-
-        /// <summary>
-        /// When a user enters the chatroom, add them to every user's client.
-        /// </summary>
-        public async Task UpdateUserList()
-        {
-            try
-            {
-                CoreUser newUser = await _dbContext.Users.FindAsync(Context.UserIdentifier);
-                await Clients.All.SendAsync("AddNewUser", newUser.StandingID, 
-                    newUser.NormalizedUserName, (Context.User.IsInRole("Moderator") || Context.User.IsInRole("Admin")));
-            } 
-            catch (Exception ex)
-            {
-                // should log when errors occur but idk how
-            }
-        }
-
-        /// <summary>
-        /// Allows the user to swap what chatroom they are in at a given time.
-        /// </summary>
-        /// <param name="join">ID of the chatroom the user is entering.</param>
-        /// <param name="leave">ID of the chatroom the user is leaving.</param>
-        /// <param name="isPrivate">Whether the chat the user is entering is private.</param>
-        /// <param name="wasPrivate">Whether the chat the user is leaving was private.</param>
-        public async Task ChangeChats(int join, int leave, bool isPrivate, bool wasPrivate)
-        {
-            try
-            {
-                if (isPrivate)
+                int id = 0;
+                string userName = "Empty";
+                string chatroom = "Default";
+                DateTime mTime = DateTime.Now;
+                string m = message;
+                try
                 {
-                    CoreUser myself = _dbContext.Users.FindAsync(Context.UserIdentifier).Result;
-                    CoreUser other = _dbContext.Users.FirstOrDefault(u => u.StandingID == join);
-
-                    if (!wasPrivate)
+                    CoreUser person = await _dbContext.Users.FindAsync(Context.UserIdentifier);
+                    Chatroom room = await _dbContext.Chatrooms.FindAsync(roomNumber);
+                    if (person != null && room != null)
                     {
-                        Chatroom exit = _dbContext.Chatrooms.FirstOrDefault(c => c.ChatID == leave);
-                        if (exit != null)
-                        {
-                            await Groups.RemoveFromGroupAsync(Context.UserIdentifier, exit.ChatName);
-                        }
-                    }
-
-                    List<Message> sinceLogin = _dbContext.Messages.Where(m => m.SentFromUser == Context.UserIdentifier
-                            || m.SentFromUser == other.Id).Where(m => m.Timestamp >= _logonTime).ToList();
-                    string from = "";
-                    foreach (Message m in sinceLogin)
-                    {
-                        from = _dbContext.Users.FindAsync(m.SentFromUser).Result.NormalizedUserName;
-                        await Clients.User(Context.UserIdentifier).SendAsync("ReceivePrivateMessage", from, m.Timestamp, m.Content, m.MessageID, join);
-                    }
-                } 
-                else
-                {
-                    Chatroom chat = _dbContext.Chatrooms.FirstOrDefault(c => c.ChatID == join);
-                    Chatroom exit = _dbContext.Chatrooms.FirstOrDefault(c => c.ChatID == leave);
-                    if (chat != null && exit != null)
-                    {
-                        await Groups.AddToGroupAsync(Context.UserIdentifier, chat.ChatName);
-                        await Groups.RemoveFromGroupAsync(Context.UserIdentifier, exit.ChatName);
-                    }
-                    // collect last 10 messages that were sent while user was online, send to user
-                    List<Message> sinceLogin = _dbContext.Messages.Where(m => m.ChatID == chat.ChatID)
-                        .Where(m => m.Timestamp >= _logonTime).OrderByDescending(m => m.Timestamp)
-                        .Take(10).ToList();
-                    string from = "";
-                    foreach (Message m in sinceLogin)
-                    {
-                        from = _dbContext.Users.FindAsync(m.SentFromUser).Result.NormalizedUserName;
-                        await Clients.User(Context.UserIdentifier).SendAsync("ReceiveMessage", from, DateTime.Now, m.Content, m.MessageID);
+                        chatroom = room.ChatName;
+                        userName = person.UserName;
+                        Message sent = new();
+                        sent.Content = message;
+                        sent.Timestamp = mTime;
+                        sent.SentFromUser = Context.UserIdentifier;
+                        id = sent.MessageID;
+                        sent.ChatID = roomNumber;
+                        _dbContext.Add(sent);
+                        await _dbContext.SaveChangesAsync();
                     }
                 }
-                // this way the user can only start sending messages again at the end of having their chat set up
-                await Clients.User(Context.UserIdentifier).SendAsync("GetNewRoom", join, isPrivate);
-            } 
-            catch (Exception ex)
-            {
-                // should log when errors occur but idk how
+                catch (Exception ex)
+                {
+                    _logging.LogInformation($"Failed to send message to room {roomNumber} @ {DateTime.Now.ToLongTimeString()} - {ex.Message}");
+                }
+                await Clients.Group(chatroom).SendAsync("ReceiveMessage", new
+                {
+                    name = userName,
+                    time = mTime.ToShortTimeString(),
+                    message = m,
+                    messageID = id
+                });
+                await Clients.Caller.SendAsync("ReceiveMessage", new
+                {
+                    name = userName,
+                    time = mTime.ToShortTimeString(),
+                    message = m,
+                    messageID = id
+                });
             }
         }
 
@@ -153,17 +107,17 @@ namespace WBSAlpha.Hubs
                 Message reported = await _dbContext.Messages.FindAsync(id);
                 if (reported != null)
                 {
-                    Report reportOut = new Report();
+                    Report reportOut = new();
                     reportOut.Reason = reason;
                     // I could have it be the ID parameter but I want to make sure it finds a result first
                     reportOut.MessageID = reported.MessageID;
                     _dbContext.Reports.Add(reportOut);
                     await _dbContext.SaveChangesAsync();
                 }
-            } 
+            }
             catch (Exception ex)
             {
-                // should log when errors occur but idk how
+                _logging.LogInformation($"Failed to report message {id} @ {DateTime.Now.ToLongTimeString()} - {ex.Message}");
             }
         }
 
@@ -180,78 +134,148 @@ namespace WBSAlpha.Hubs
                 string from = "Empty";
                 int fKey = -1;
                 string to = "Empty2";
-                DateTime time = DateTime.Now;
+                DateTime sentAt = DateTime.Now;
                 int outKey = toUser;
                 try
                 {
                     CoreUser fUser = await _dbContext.Users.FindAsync(Context.UserIdentifier);
                     CoreUser tUser = await _dbContext.Users.FirstOrDefaultAsync(u => u.StandingID == toUser);
-                    from = fUser.NormalizedUserName;
+                    from = fUser.UserName;
                     fKey = fUser.StandingID;
                     to = tUser.Id;
-                    
-                    Message sent = new Message();
+
+                    Message sent = new();
                     sent.Content = message;
-                    sent.Timestamp = time;
+                    sent.Timestamp = sentAt;
                     sent.SentFromUser = Context.UserIdentifier;
                     sent.SentToUser = to;
-
                     messageID = sent.MessageID;
+
                     _dbContext.Messages.Add(sent);
                     await _dbContext.SaveChangesAsync();
-                } 
+                }
                 catch (Exception ex)
                 {
-                    // should log when errors occur but idk how
+                    _logging.LogInformation($"Failed to send private message @ {DateTime.Now.ToLongTimeString()} - {ex.Message}");
                 }
                 // send the message to just the two users
                 if (messageID > -1)
                 {
-                    await Clients.User(Context.UserIdentifier).SendAsync("ReceivePrivateMessage", 
-                        from, time, message, messageID, outKey);
-                    await Clients.User(to).SendAsync("ReceivePrivateMessage",
-                        from, time, message, messageID, fKey);
+                    await Clients.User(Context.UserIdentifier).SendAsync("ReceivePrivateMessage", new {
+                        name = from, time = sentAt.ToShortTimeString(), content = message, mId = messageID, key = outKey
+                    });
+                    await Clients.User(to).SendAsync("ReceivePrivateMessage", new {
+                        name = from, time = sentAt.ToShortTimeString(), content = message, mId = messageID, key = outKey
+                    });
                 }
             }
         }
 
         /// <summary>
-        /// Attempt to send a message to the given chatroom.
+        /// Allows the user to swap what chatroom they are in at a given time.
         /// </summary>
-        /// <param name="roomNumber">ID of the room to send a message into.</param>
-        /// <param name="message">Message to send to the chat.</param>
-        public async Task SendMessage(int roomNumber, string message)
+        /// <param name="join">ID of the chatroom the user is entering.</param>
+        /// <param name="leave">ID of the chatroom the user is leaving.</param>
+        /// <param name="isPrivate">Whether the chat the user is entering is private.</param>
+        /// <param name="wasPrivate">Whether the chat the user is leaving was private.</param>
+        public async Task ChangeChats(int join, int leave, bool isPrivate, bool wasPrivate)
         {
-            if (!message.Equals(""))
+            try
             {
-                int messageID = 0;
-                string userName = "Empty";
-                string chatroom = "Default";
-                DateTime mTime = DateTime.Now;
-                try
+                if (isPrivate)
                 {
-                    CoreUser person = await _dbContext.Users.FindAsync(Context.UserIdentifier);
-                    Chatroom room = await _dbContext.Chatrooms.FindAsync(roomNumber);
-                    if (person != null && room != null)
+                    CoreUser myself = await _dbContext.Users.FindAsync(Context.UserIdentifier);
+                    CoreUser other = await _dbContext.Users.FirstOrDefaultAsync(u => u.StandingID == join);
+
+                    if (!wasPrivate)
                     {
-                        chatroom = room.ChatName;
-                        userName = person.NormalizedUserName;
-                        Message sent = new Message();
-                        sent.Content = message;
-                        sent.Timestamp = mTime;
-                        sent.SentFromUser = Context.UserIdentifier;
-                        messageID = sent.MessageID;
-                        sent.ChatID = roomNumber;
-                        _dbContext.Add(sent);
-                        await _dbContext.SaveChangesAsync();
+                        Chatroom exit = _dbContext.Chatrooms.FirstOrDefault(c => c.ChatID == leave);
+                        if (exit != null)
+                        {
+                            await Groups.RemoveFromGroupAsync(Context.UserIdentifier, exit.ChatName);
+                        }
+                    }
+
+                    List<Message> sinceLogin = _dbContext.Messages.Where(m => m.SentFromUser == Context.UserIdentifier
+                            || m.SentFromUser == other.Id).Where(m => m.Timestamp >= _today).ToList();
+                    CoreUser user;
+                    foreach (Message m in sinceLogin)
+                    {
+                        user = await _dbContext.Users.FindAsync(m.SentFromUser);
+                        await Clients.Caller.SendAsync("ReceivePrivateMessage", new {
+                            name = user.UserName,
+                            time = m.Timestamp.ToShortTimeString(),
+                            content = m.Content,
+                            mId = m.MessageID,
+                            key = join
+                        });
                     }
                 }
-                catch (Exception ex)
+                else
                 {
-                    // should log when errors occur but idk how
+                    Chatroom chat = _dbContext.Chatrooms.FirstOrDefault(c => c.ChatID == join);
+                    Chatroom exit = _dbContext.Chatrooms.FirstOrDefault(c => c.ChatID == leave);
+                    if (chat != null && exit != null)
+                    {
+                        await Groups.AddToGroupAsync(Context.UserIdentifier, chat.ChatName);
+                        await Groups.RemoveFromGroupAsync(Context.UserIdentifier, exit.ChatName);
+                    }
+                    // collect last 10 messages that were sent while user was online, send to user
+                    List<Message> sinceLogin = _dbContext.Messages.Where(m => m.ChatID == chat.ChatID)
+                        .Where(m => m.Timestamp >= _today).OrderByDescending(m => m.Timestamp)
+                        .Take(10).ToList();
+                    CoreUser user;
+                    foreach (Message m in sinceLogin)
+                    {
+                        user = await _dbContext.Users.FindAsync(m.SentFromUser);
+                        await Clients.Caller.SendAsync("ReceiveMessage", new {
+                            name = user.UserName,
+                            time = m.Timestamp.ToShortTimeString(),
+                            content = m.Content,
+                            mId = m.MessageID,
+                            key = join
+                        });
+                    }
                 }
+            }
+            catch (Exception ex)
+            {
+                _logging.LogInformation($"User failed to change chatrooms between {leave}->{join} (private: {isPrivate}) @ {DateTime.Now.ToLongTimeString()} - {ex.Message}");
+            }
+        }
 
-                await Clients.Group(chatroom).SendAsync("ReceiveMessage", userName, mTime, message, messageID);
+        private async Task UpdateChats()
+        {
+            List<Chatroom> chats = await _dbContext.Chatrooms.ToListAsync();
+            foreach (Chatroom chat in chats)
+            {
+                await Clients.Caller.SendAsync("AddChatroom", new
+                {
+                    id = chat.ChatID,
+                    name = chat.ChatName
+                });
+            }
+            await Groups.AddToGroupAsync(Context.UserIdentifier, chats.First().ChatName);
+        }
+
+        /// <summary>
+        /// When a user enters the chatroom, add them to every user's client.
+        /// </summary>
+        private async Task UpdateUserList()
+        {
+            try
+            {
+                CoreUser newUser = await _dbContext.Users.FindAsync(Context.UserIdentifier);
+                await Clients.All.SendAsync("AddNewUser", new
+                {
+                    id = newUser.StandingID,
+                    name = newUser.UserName,
+                    special = (Context.User.IsInRole("Moderator") || Context.User.IsInRole("Admin"))
+                });
+            } 
+            catch (Exception ex)
+            {
+                _logging.LogInformation($"Update User List failed @ {DateTime.Now.ToLongTimeString()} - {ex.Message}");
             }
         }
     }

@@ -6,7 +6,7 @@
 }
 <!--
 Modified By:    Quinn Helm
-Date:           02-11-2021
+Date:           23-12-2021
 -->
 <partial name="_StatusMessage" model="Model.StatusMessage" />
 <div class="col-12 mx-auto">
@@ -46,29 +46,52 @@ Date:           02-11-2021
                 <td class="col-4 align-middle text-center">@ViewData.Model.Created</td>
                 <td class="col-4"></td>
             </tr>
-            <tr>
-                <td class="col-4 mx-auto text-center">
-                    <a class="btn btn-outline-success @ManageNavPages.TwoFactorAuthenticationNavClass(ViewContext)" id="two-factor" asp-page="./TwoFactorAuthentication">Two-Factor Authentication</a>
-                </td>
-                <td class="col-4"></td>
-                <td class="col-4 mx-auto text-center">
-                    <button class="btn btn-danger">Close Account</button>
-                </td>
-            </tr>
-            <tr>
-                <td class="col-4 mx-auto text-center">Average Build Rating</td>
-                <td class="col-4 text-center"></td>
-                <td class="col-4">
-                    <a class="btn btn-success text-white mx-auto" asp-controller="Games" asp-action="CreateBuild">Create New Build</a>
-                </td>
-            </tr>
-            <tr>
-                <td class="col-4"></td>
-                <td class="col-4 mx-auto text-center">
-                    <a class="btn btn-success text-white mx-auto" asp-controller="Games" asp-action="Chat">Enter Chat</a>
-                </td>
-                <td class="col-4"></td>
-            </tr>
+            @{
+                if (User.IsInRole("Moderator") || User.IsInRole("Administrator"))
+                {
+                    <tr>
+                        <td class="col-4 mx-auto align-middle text-center">Last Login</td>
+                        <td class="col-4 align-middle text-center">@ViewData.Model.LastLogin</td>
+                        <td class="col-4"></td>
+                    </tr>
+                    <tr>
+                        <td class="col-4 mx-auto align-middle text-center">Last Time Kicked</td>
+                        <td class="col-4 align-middle text-center">@ViewData.Model.LastKicked</td>
+                        <td class="col-4">Kick Total: @ViewData.Model.KickTotal</td>
+                    </tr>
+                    <tr>
+                        <td class="col-4 mx-auto align-middle text-center">Last Time Banned</td>
+                        <td class="col-4 align-middle text-center">@ViewData.Model.LastBanned</td>
+                        <td class="col-4">Ban Total: @ViewData.Model.BanTotal</td>
+                    </tr>
+                }
+                else
+                {
+                    <tr>
+                        <td class="col-4 mx-auto text-center">
+                            <a class="btn btn-outline-success @ManageNavPages.TwoFactorAuthenticationNavClass(ViewContext)" id="two-factor" asp-page="./TwoFactorAuthentication">Two-Factor Authentication</a>
+                        </td>
+                        <td class="col-4"></td>
+                        <td class="col-4 mx-auto text-center">
+                            <button class="btn btn-danger">Close Account</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="col-4 mx-auto text-center align-middle">Average Build Rating</td>
+                        <td class="col-4 text-center align-middle"></td>
+                        <td class="col-4 text-center align-middle">
+                            <a class="btn btn-success text-white mx-auto" asp-controller="Games" asp-action="CreateBuild">Create New Build</a>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="col-4"></td>
+                        <td class="col-4 mx-auto text-center">
+                            <a class="btn btn-success text-white mx-auto" asp-controller="Games" asp-action="Chat">Enter Chat</a>
+                        </td>
+                        <td class="col-4"></td>
+                    </tr>
+                }
+            }
         </tbody>
     </table>
 </div>

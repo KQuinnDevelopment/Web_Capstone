@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -12,7 +13,7 @@ using WBSAlpha.Data;
 using WBSAlpha.Models;
 /*
 Modified By:    Quinn Helm
-Date:           27-11-2021
+Date:           01-01-2022
 */
 namespace WBSAlpha.Areas.Identity.Pages.Account.Manage
 {
@@ -41,15 +42,27 @@ namespace WBSAlpha.Areas.Identity.Pages.Account.Manage
         [EmailAddress]
         [Display(Name = "Active Email")]
         public string Email { get; set; }
-        [DataType(DataType.Date)]
         [Display(Name = "Date of Birth")]
-        [DisplayFormat(DataFormatString = "{0:g}", ApplyFormatInEditMode = true)]
-        public DateTime Age { get; private set; }
+        public string Age { get; private set; } // string to fix formatting 
         [Display(Name = "Account Created")]
         [DisplayFormat(DataFormatString = "{0:g}", ApplyFormatInEditMode = true)]
         public DateTime Created { get; private set; }
         [Display(Name = "Average Build Rating")]
         public int AverageBuildRating { get; private set; }
+        [DataType(DataType.DateTime)]
+        [Display(Name = "Last Login")]
+        [DisplayFormat(DataFormatString = "{0:g}", ApplyFormatInEditMode = true)]
+        public DateTime LastLogin { get; private set; }
+        [DataType(DataType.DateTime)]
+        [Display(Name = "Last Time Kicked")]
+        [DisplayFormat(DataFormatString = "{0:g}", ApplyFormatInEditMode = true)]
+        public DateTime LastKicked { get; private set; }
+        public int KickTotal { get; private set; }
+        [DataType(DataType.DateTime)]
+        [Display(Name = "Last Time Banned")]
+        [DisplayFormat(DataFormatString = "{0:g}", ApplyFormatInEditMode = true)]
+        public DateTime LastBanned { get; private set; }
+        public int BanTotal { get; private set; }
 
         [TempData]
         public string StatusMessage { get; set; }
@@ -63,6 +76,11 @@ namespace WBSAlpha.Areas.Identity.Pages.Account.Manage
             [StringLength(45, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 3)]
             public string UserName { get; set; }
 
+            [StringLength(45, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 6)]
+            [DataType(DataType.Password)]
+            [Display(Name = "Password")]
+            public string Password { get; set; }
+
             [EmailAddress]
             [Display(Name = "Active Email")]
             public string Email { get; set; }
@@ -70,22 +88,35 @@ namespace WBSAlpha.Areas.Identity.Pages.Account.Manage
 
         private async Task LoadAsync(CoreUser user)
         {
-            var userName = await _userManager.GetUserNameAsync(user);
+            string userName = user.UserName;
+            Standing uStanding = await _dbContext.Standings.FirstOrDefaultAsync(s => s.StandingID == user.StandingID);
             int rating = 0;
+            int votes = 0;
             List<GameOneBuild> builds = _dbContext.GameOneBuilds.Where(b => b.UserID == user.Id).ToList();
             foreach (GameOneBuild build in builds)
             {
                 rating += build.Rating;
+                votes += build.Votes;
             }
             // this does not have to be the most accurate
-            AverageBuildRating = (builds.Count) > 0 ? (rating / builds.Count) : 0;
+            if (votes == 0)
+            {
+                AverageBuildRating = 0;
+            }
+            else
+            {
+                AverageBuildRating = (builds.Count) > 0 ? ((rating / votes) / builds.Count) : 0;
+            }
             // it is not a life or death application of rounding, so integer division will suffice
-
             UserName = userName;
             Email = user.Email;
-            Age = user.Age;
+            Age = user.Age.ToShortDateString(); // better formatting
             Created = user.Created;
             ValidUserName = !user.NormalizedUserName.Equals(user.NormalizedEmail);
+            LastKicked = (uStanding.KickEnds != null) ? ((DateTime) uStanding.KickEnds) : DateTime.MinValue;
+            LastBanned = (uStanding.BanEnds != null) ? ((DateTime)uStanding.BanEnds) : DateTime.MinValue;
+            KickTotal = uStanding.KickTotal;
+            BanTotal = uStanding.BanTotal;
 
             Input = new InputModel
             {
@@ -131,6 +162,8 @@ namespace WBSAlpha.Areas.Identity.Pages.Account.Manage
                 await LoadAsync(user);
                 return Page();
             }
+
+            await _userManager.UpdateAsync(user);
 
             ValidUserName = !user.NormalizedUserName.Equals(user.NormalizedEmail);
 

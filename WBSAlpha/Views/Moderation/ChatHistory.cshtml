@@ -1,50 +1,45 @@
-﻿@page
-@model WBSAlpha.Controllers.ModerationController.SearchInput
-@{ 
-    ViewData["Title"] = "View Chat History";
-    List<Chatroom> chats = (List<Chatroom>)ViewData["Chats"];
-    string[] userNames = (string[])ViewData["UserNames"];
-    Message[] messages = (Message[])ViewData["Messages"];
+﻿@model WBSAlpha.Controllers.ModerationController.SearchInput
+@{
+    List<Chatroom> chats = ((List<Chatroom>)ViewData["Chats"] != null) ? ((List<Chatroom>)ViewData["Chats"]) : new List<Chatroom>(0);
+    string[] userNames = ((string[]) ViewData["UserNames"] != null) ? ((string[])ViewData["UserNames"]) : new string[0];
+    Message[] messages = ((Message[])ViewData["Messages"] != null) ? ((Message[])ViewData["Messages"]) : new Message[0];
 }
 <div>
-    <h1>@ViewData["Title"]</h1>
+    <h1 class="mx-auto p-2 text-center">@ViewData["Title"]</h1>
 
     <partial name="~/Views/Shared/_ModerationNavigation.cshtml" />
-    <div class="container mh-100" style="height: 75vh; border:2px solid black;">
-        <div class="row btn-group">
+    <div class="container mh-100" style="height: 65vh; border:2px solid black;">
+        <div class="row btn-toolbar m-2">
             @foreach (Chatroom chat in chats)
             {
-                <button class="btn btn-outline-dark text-dark" id="@chat.ChatID">@chat.ChatName</button>
+                <a class="btn btn-outline-info text-dark mx-3" asp-controller="Moderation" asp-action="ChatroomHistory" asp-route-id="@chat.ChatID">@chat.ChatName</a>
             }
         </div>
-        <form asp-controller="Moderation" asp-action="SearchHistory" method="post" class="row">
-            <div class="form-group">
-                <label asp-for="On"></label>
-                <input asp-for="On" type="date" class="form-control" />
-                <label>(Between)</label>
-                <label asp-for="After"></label>
-                <input asp-for="After" type="date" class="form-control" />
-                <label asp-for="Before"></label>
-                <input asp-for="Before" type="date" class="form-control" />
-                <button type="submit">Submit Search</button>
-            </div>
+        <form asp-controller="Moderation" asp-action="SearchHistory" method="post" class="row mx-auto form-inline">
+            <label class="mx-2" asp-for="On"></label>
+            <input class="mx-2 form-control" asp-for="On" type="date" />
+            <label class="mx-2" asp-for="After"></label>
+            <input class="mx-2 form-control" asp-for="After" type="date" />
+            <label class="mx-2" asp-for="Before"></label>
+            <input class="mx-2 form-control" asp-for="Before" type="date" />
+            <button class="btn btn-info" type="submit">Submit Search</button>
         </form>
         <div class="row" style="overflow-y: scroll;">
-            <table class="table">
+            <table class="table mx-auto">
                 <thead>
                     <tr>
-                        <th>User Name</th>
-                        <th>Timestamp</th>
-                        <th>Message</th>
+                        <th class="mx-auto text-center">User Name</th>
+                        <th class="mx-auto text-center">Timestamp</th>
+                        <th class="mx-auto text-center">Message</th>
                     </tr>
                 </thead>
                 <tbody>
                     @for (int i = 0; i < messages.Length; i++)
                     {
                         <tr>
-                            <th>@userNames[i]</th>
-                            <th>@messages[i].Timestamp</th>
-                            <th>@messages[i].Content</th>
+                            <th class="mx-auto text-center">@userNames[i]</th>
+                            <th class="mx-auto text-center">@messages[i].Timestamp</th>
+                            <th class="mx-auto text-center">@messages[i].Content</th>
                         </tr>
                     }
                 </tbody>

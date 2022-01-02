@@ -1,0 +1,117 @@
+﻿@model WBSAlpha.Models.BuildRatingModel
+@{
+    ViewData["Title"] = "Build Details";
+    bool owner = (bool)ViewData["IsOwner"];
+    bool canDelete = (bool)ViewData["CanDelete"];
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h1 class="mx-auto text-center p-2">@Model.BuildName</h1>
+<div class="container">
+    <div class="container mh-100 py-2" style="border:2px solid black;">
+        <div class="row">
+            <h5 class="mx-auto">Description</h5>
+        </div>
+        <div class="row">
+            <p class="mx-auto">@Model.Description</p>
+        </div>
+        <div class="row p-2">
+            <div class="col-4 mx-auto">
+                <h5 class="mx-auto text-center align-middle">Weapon: @Model.WeaponOne.WeaponName</h5>
+                <ul class="list-group" style="list-style: none;">
+                    <li class="list-group-item w-100 text-center align-middle">Damage: @Model.WeaponOne.WeaponDamage</li>
+                    <li class="list-group-item w-100 text-center align-middle">Hit Chance: @Model.WeaponOne.WeaponHit</li>
+                    <li class="list-group-item w-100 text-center align-middle">Crit Chance: @Model.WeaponOne.WeaponCrit</li>
+                    <li class="list-group-item w-100 text-center align-middle">@Model.WeaponOne.WeaponDescription</li>
+                </ul>
+            </div>
+            <div class="col-4 mx-auto">
+                <h5 class="mx-auto text-center align-middle">Weapon: @Model.WeaponTwo.WeaponName</h5>
+                <ul class="list-group" style="list-style: none;">
+                    <li class="list-group-item w-100 text-center align-middle">Damage: @Model.WeaponTwo.WeaponDamage</li>
+                    <li class="list-group-item w-100 text-center align-middle">Hit Chance: @Model.WeaponTwo.WeaponHit</li>
+                    <li class="list-group-item w-100 text-center align-middle">Crit Chance: @Model.WeaponTwo.WeaponCrit</li>
+                    <li class="list-group-item w-100 text-center align-middle">@Model.WeaponTwo.WeaponDescription</li>
+                </ul>
+            </div>
+        </div>
+        <div class="row p-2">
+            <div class="col-3 mx-auto">
+                <h5 class="mx-auto text-center align-middle">Offensive Rune</h5>
+                <ul class="list-group" style="list-style: none;">
+                    <li class="list-group-item w-100 text-center align-middle">@Model.OffensiveRuneOne.RuneName</li>
+                    <li class="list-group-item w-100 text-center align-middle">@Model.OffensiveRuneOne.RuneDescription</li>
+                </ul>
+            </div>
+            <div class="col-3 mx-auto">
+                <h5 class="mx-auto text-center align-middle">Offensive Rune</h5>
+                <ul class="list-group" style="list-style: none;">
+                    <li class="list-group-item w-100 text-center align-middle">@Model.OffensiveRuneTwo.RuneName</li>
+                    <li class="list-group-item w-100 text-center align-middle">@Model.OffensiveRuneTwo.RuneDescription</li>
+                </ul>
+            </div>
+            <div class="col-3 mx-auto">
+                <h5 class="mx-auto text-center align-middle">Defensive Rune</h5>
+                <ul class="list-group" style="list-style: none;">
+                    <li class="list-group-item w-100 text-center align-middle">@Model.DefensiveRune.RuneName</li>
+                    <li class="list-group-item w-100 text-center align-middle">@Model.DefensiveRune.RuneDescription</li>
+                </ul>
+            </div>
+        </div>
+        <div class="row py-1">
+            <div class="col-6 mx-auto">
+                <h5 class="mx-auto text-center align-middle">Notes</h5>
+                <p class="mx-auto text-center align-middle">@Model.Notes</p>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-6 mx-auto text-center align-middle">
+                <p class="mx-auto">Rating @Model.Rating</p>
+                <p class="mx-auto">Votes @Model.Votes</p>
+                <p class="mx-auto">Created On @Model.CreationDate</p>
+                <p class="mx-auto">By @Model.CreatorName</p>
+            </div>
+        </div>
+        @{ if (owner == false)
+            {
+                <div class="row py-1">
+                    <form class="col-6 mx-auto" asp-action="Rate" method="post">
+                        @Html.HiddenFor(b => b.BuildID)
+                        <div class="row mx-auto">
+                            <div class="form-check form-check-inline mx-3">
+                                <input type="radio" asp-for="BuildRating" value="1" class="mx-auto px-2 form-check-input" />
+                                <label class="form-check-label">1</label>
+                            </div>
+                            <div class="form-check form-check-inline mx-3">
+                                <input type="radio" asp-for="BuildRating" value="2" class="mx-auto px-2 form-check-input" />
+                                <label class="form-check-label">2</label>
+                            </div>
+                            <div class="form-check form-check-inline mx-3">
+                                <input type="radio" asp-for="BuildRating" value="3" class="mx-auto px-2 form-check-input" />
+                                <label class="form-check-label">3</label>
+                            </div>
+                            <div class="form-check form-check-inline mx-3">
+                                <input type="radio" asp-for="BuildRating" value="4" class="mx-auto px-2 form-check-input" />
+                                <label class="form-check-label">4</label>
+                            </div>
+                            <div class="form-check form-check-inline mx-3">
+                                <input type="radio" asp-for="BuildRating" value="5" class="mx-auto px-2 form-check-input" />
+                                <label class="form-check-label">5</label>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <button type="submit" class="btn btn-info mx-auto">Submit Rating</button>
+                        </div>
+                    </form>
+                </div>
+            }
+        }
+        <div class="row pt-2">
+            @if (canDelete == true)
+            {
+                <a class="btn btn-danger mx-auto my-1" asp-action="DeleteBuild" asp-route-id="@Model.BuildID">Delete</a>
+            }
+            <a class="btn btn-outline-dark mx-auto my-1" asp-action="Index">Back to List</a>
+        </div>
+    </div>
+</div>

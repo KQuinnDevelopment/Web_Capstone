@@ -1,50 +1,68 @@
 ﻿"use strict";
 /*
 Modified By: Quinn Helm
-Date:        01-12-2021
+Date:        03-12-2021
 */
-var connection = new signalR.HubConnectionBuilder().withUrl("/Chathub").build();
+var connection = new signalR.HubConnectionBuilder().withUrl("/ChatClient").build();
 var roomID = -1;
+var isPrivate = false;
 var wasPrivate = false;
 
-document.getElementById("sendMessageButton").disabled = true;
+document.getElementById("userSend").disabled = true;
 
-connection.on("ReceiveMessage", function (user, time, message, messageID) {
-    var li = document.createElement("li").className("row mx-auto p-1");
-    var a = document.createElement("a").className("text-danger mx-auto");
+// receive message
+connection.on("ReceiveMessage", (content) => {
+    var li = document.createElement("li");
+    li.className = "row mx-auto";
+    li.id = content.name;
+    var a = document.createElement("a");
+    a.className = "text-info mx-auto";
+    a.id = content.mId;
+    a.innerHTML = content.name;
     a.addEventListener("click", function (event) {
-        // need to have a popup that asks user for reason input&confirmation
-        connection.invoke("ReportMessage", messageID, "reason").catch(function (error) {
-            return console.error(error.toString());
-        });
+        reportMe(content.mId);
         event.preventDefault();
     });
-    document.getElementById("chatBox").appendChild(li);
-    li.textContent = `${user} - ${time}: ${rebuildString(message)}`;
+    li.textContent = `${content.name} - ${content.time}: ${rebuildString(content.message)} `;
     li.appendChild(a);
+    document.getElementById("chatBox").appendChild(li);
 });
-connection.on("ReceivePrivateMessage", function (user, time, message, messageID, key) {
-    if (roomID != key) {
-        var li = document.createElement("li").className("nav-item");
-        var a = document.createElement("a").className("nav-link").setAttribute("id", key);
-        a.innerHTML = user;
-        a.addEventListener("click", function (event) {
-            swapRoom(key, true);
-            event.preventDefault();
-        });
-    } else {
-        var li = document.createElement("li").className("row mx-auto p-1");
-        var a = document.createElement("a").className("text-danger mx-auto");
-        a.addEventListener("click", function (event) {
-            // need to have a pop up that asks user for reason input&confirmation
-            connection.invoke("ReportMessage", messageID, "reason").catch(function (error) {
-                return console.error(error.toString());
+// receive private message
+connection.on("ReceivePrivateMessage", (pm) => {
+    if (roomID != parseInt(pm.key)) {
+        var li = document.createElement("li");
+        li.className = "nav-item";
+        li.id = pm.name;
+        if (content.mId != -1) {
+            var a = document.createElement("a");
+            a.className = "text-info";
+            a.id = parseInt(pm.key);
+            a.innerHTML = pm.name;
+            a.addEventListener("click", function (event) {
+                reportMe(pm.mId);
+                event.preventDefault();
             });
-            event.preventDefault();
-        });
-        document.getElementById("chatBox").appendChild(li);
-        li.textContent = `${user} - ${time}: ${rebuildString(message)}`;
+            li.appendChild(a);
+        }
         li.appendChild(a);
+        document.getElementById("chatList").appendChild(li);
+    } else {
+        var li = document.createElement("li");
+        li.className = "row mx-auto";
+        li.id = pm.mId;
+        if (content.mId != -1) {
+            var a = document.createElement("a");
+            a.className = "text-info";
+            a.id = parseInt(pm.key);
+            a.innerHTML = pm.name;
+            a.addEventListener("click", function (event) {
+                reportMe(pm.mId);
+                event.preventDefault();
+            });
+            li.appendChild(a);
+        }
+        li.textContent = `${pm.name} - ${pm.time}: ${rebuildString(pm.message)}`;
+        document.getElementById("chatBox").appendChild(li);
     }
 });
 // ensure that any malicious code cannot run on user end
@@ -62,68 +80,77 @@ function rebuildString(string) {
     const expression = /[&<>"'/`]/ig;
     return string.replace(expression, (match) => (mapper[match]));
 }
-
-// need to be able to add rooms programmatically on first entering
-function swapRoom(id, isPrivate) {
-    while (document.getElementById("chatBox").childElementCount > 0) {
-        document.getElementById("chatBox").removeChild();
-    }
-    document.getElementById("sendMessageButton").disabled = true;
-    connection.invoke("ChangeChats", id, roomID, isPrivate, wasPrivate).catch(function (error) {
-        return console.error(error.toString());
-    });
-}
-connection.on("GetNewRoom", function (id, isPrivate) {
-    roomID = id;
-    document.getElementById("sendMessageButton").disabled = false;
-    wasPrivate = isPrivate;
-    if (isPrivate) {
-        document.getElementById("sendMessageButton").removeEventListener("click", sendMessage());
-        document.getElementById("sendMessageButton").addEventListener("click", sendPrivateMessage());
-    } else {
-        document.getElementById("sendMessageButton").removeEventListener("click", sendPrivateMessage());
-        document.getElementById("sendMessageButton").addEventListener("click", sendMessage());
-    }
-});
 // can't have an anonymous function remove/add listeners so this has to be made
 function sendMessage() {
     var message = document.getElementById("messageInput").value;
-    connection.invoke("SendMessage", roomID, message).catch(function (error) {
+    if (isPrivate) {
+        connection.invoke("SendPrivateMessage", roomID, message).catch(function (error) {
+            return console.error(error.toString());
+        });
+    }
+    else {
+        connection.invoke("SendMessage", roomID, message).catch(function (error) {
+            return console.error(error.toString());
+        });
+    }
+    console.log(message + ", is private: " + isPrivate);
+    document.getElementById("messageInput").value = "";
+}
+// need to be able to add rooms programmatically on first entering
+function swapRoom(id, isPrivate) {
+    document.getElementById("userSend").disabled = true;
+    document.getElementById("chatBox").innerHTML = "";
+    console.log("joining " + id);
+    connection.invoke("ChangeChats", id, roomID, isPrivate, wasPrivate).catch(function (error) {
         return console.error(error.toString());
     });
-    event.preventDefault();
+    wasPrivate = isPrivate;
+    document.getElementById("userSend").disabled = false;
 }
-function sendPrivateMessage() {
-    var message = document.getElementById("messageInput").value;
-    connection.invoke("SendPrivateMessage", roomID, message).catch(function (error) {
-        return console.error(error.toString());
-    });
-    event.preventDefault();
+// report message prompt!
+function reportMe(id) {
+    let reason = prompt("Reason for Report?");
+    if (reason != null && id != -1) {
+        connection.invoke("ReportMessage", id, reason).catch(function (error) {
+            return console.error(error.toString());
+        });
+    }
 }
+
 // need to make sure that when user change rooms, update the text chat
 // as well as roomID and roomName variables
-connection.on("AddChatroom", function (id, name) {
-    var li = document.createElement("li").className("nav-item");
-    var a = document.createElement("a").className("nav-link").setAttribute("id", id);
-    a.innerHTML = name;
+connection.on("AddChatroom", (room) => {
+    var li = document.createElement("li");
+    li.className = "nav-item";
+    li.id = room.name;
+    var a = document.createElement("a");
+    a.className = "nav-link";
+    a.id = room.id;
+    a.innerHTML = room.name;
     a.addEventListener("click", function (event) {
-        swapRoom(id, false);
+        swapRoom(room.id, false);
         event.preventDefault();
     });
+    li.appendChild(a);
     document.getElementById("chatList").appendChild(li);
     if (roomID == -1) {
-        roomID = id;
+        roomID = parseInt(room.id);
     }
 });
-connection.on("AddNewUser", function (id, name, isModerator) {
-    var li = document.createElement("li").className("row mx-auto p-1");
-    var a = document.createElement("a").className("text-info mx-auto").setAttribute("id", id);
-    a.innerHTML = name;
+connection.on("AddNewUser", (user) => {
+    var li = document.createElement("li");
+    li.className = "row mx-auto p-1";
+    li.id = user.name;
+    var a = document.createElement("a");
+    a.className = "text-info";
+    a.id = user.id;
+    a.innerHTML = user.name;
     a.addEventListener("click", function (event) {
-        swapRoom(id, true);
+        console.log("user clicked!");
         event.preventDefault();
     });
-    if (isModerator) {
+    li.appendChild(a);
+    if (user.special) {
         document.getElementById("mods").appendChild(li);
     } else {
         document.getElementById("normalUsers").appendChild(li);
@@ -135,10 +162,12 @@ connection.on("Disconnect", function () {
 });
 
 connection.start().then(function () {
-    connection.invoke("SpawnChats");
-    connection.invoke("UpdateUserList");
-    document.getElementById("sendMessageButton").disabled = false;
-}).catch(function (error) {
-    return console.error(error.toString());
-});
-document.getElementById("sendMessageButton").addEventListener("click", sendMessage());
+    document.getElementById("userSend").disabled = false;
+    document.getElementById("userSend").addEventListener("click", function (event) {
+        sendMessage();
+        event.preventDefault();
+    });
+    document.getElementById("userMessageForm").addEventListener("submit", function (event) {
+        event.preventDefault();
+    });
+}).catch(err => console.error(err));

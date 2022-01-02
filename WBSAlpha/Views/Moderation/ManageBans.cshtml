@@ -1,15 +1,13 @@
-﻿@page
-@{
-    ViewData["Title"] = "Manage User Bans";
+﻿@{
     CoreUser[] rudeUsers = (CoreUser[])ViewData["RudeUsers"];
     string[] reasons = (string[])ViewData["Reasons"];
     string[] rudeMessages = (string[])ViewData["RudeMessages"];
 }
 <div>
-    <h1>@ViewData["Title"]</h1>
+    <h1 class="mx-auto p-2 text-center">@ViewData["Title"]</h1>
 
     <partial name="~/Views/Shared/_ModerationNavigation.cshtml" />
-    <div class="container mh-100" style="height: 75vh; border: 2px solid black; overflow-y: scroll; overflow-x: inherit;">
+    <div class="container mh-100" style="height: 65vh; border: 2px solid black; overflow-y: scroll; overflow-x: inherit;">
         <table class="table">
             <thead>
                 <tr>

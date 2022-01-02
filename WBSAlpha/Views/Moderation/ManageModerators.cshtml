@@ -1,34 +1,42 @@
-﻿@page
-@{
+﻿@{
     ViewData["Title"] = "Manage Moderators";
     CoreUser[] users = (CoreUser[]) ViewData["Users"];
     Standing[] standings = (Standing[]) ViewData["Standing"];
+    bool[] moderators = (bool[]) ViewData["IsMod"];
 }
 <div>
-    <h1>@ViewData["Title"]</h1>
+    <h1 class="mx-auto p-2 text-center">@ViewData["Title"]</h1>
     <partial name="~/Views/Shared/_ModerationNavigation.cshtml" />
-    <div class="container mh-100" style="height: 75vh; border:2px solid black; overflow-y: scroll; overflow-x: inherit;">
-        <table class="table">
+    <div class="container mh-100" style="height: 65vh; border:2px solid black; overflow-y: scroll; overflow-x: inherit;">
+        <table class="table mx-auto">
             <thead>
                 <tr>
-                    <th>User Name</th>
-                    <th>Kick Count</th>
-                    <th>Ban Count</th>
-                    <th>Action</th>
+                    <th class="mx-auto text-center">User Name</th>
+                    <th class="mx-auto text-center">Kick Count</th>
+                    <th class="mx-auto text-center">Ban Count</th>
+                    <th class="mx-auto text-center">Action</th>
                 </tr>
             </thead>
             <tbody>
-                @for (int i = 0; i < users.Length; i++)
-                {
-                <tr>
-                    <td>@users[i].UserName</td>
-                    <td>@standings[i].KickCount</td>
-                    <td>@standings[i].BanCount</td>
-                    <td>
-                        <a class="btn btn-warning" asp-controller="Moderation" asp-action="PromoteUser" asp-route-id="@users[i].Id">Promote</a>
-                        <a class="btn btn-danger" asp-controller="Moderation" asp-action="DemoteUser" asp-route-id="@users[i].Id">Demote</a>
-                    </td>
-                </tr>
+                @{
+                    @for (int i = 0; i < users.Length; i++)
+                    {
+                        <tr>
+                            <td class="mx-auto text-center">@users[i].UserName</td>
+                            <td class="mx-auto text-center">@standings[i].KickCount</td>
+                            <td class="mx-auto text-center">@standings[i].BanCount</td>
+                            <td class="mx-auto text-center">
+                                @if (moderators[i] == true)
+                                {
+                                    <a class="btn btn-danger m-1" asp-controller="Moderation" asp-action="DemoteUser" asp-route-id="@users[i].Id">Demote</a>
+                                }
+                                else
+                                {
+                                    <a class="btn btn-warning mx-1" asp-controller="Moderation" asp-action="PromoteUser" asp-route-id="@users[i].Id">Promote</a>
+                                }
+                            </td>
+                        </tr>
+                    }
                 }
             </tbody>
         </table>

@@ -12,7 +12,7 @@ using WBSAlpha.Hubs;
 using WBSAlpha.Models;
 /*
 Modified By:    Quinn Helm
-Date:           02-12-2021
+Date:           28-12-2021
 */
 namespace WBSAlpha
 {
@@ -57,8 +57,9 @@ namespace WBSAlpha
             }); // if all else fails, require the user to be authorized
 
             services.AddScoped<IAuthorizationHandler, ProfileViewAuthorization>();
-            services.AddSingleton<IAuthorizationHandler, ModerationAlterAuthorization>();
-            // singleton because no EF and all info is in context parameter
+            services.AddScoped<IAuthorizationHandler, BuildDeletionAuthorization>();
+            
+            // singleton in cases where not using EF and all info is in context parameter
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -89,7 +90,7 @@ namespace WBSAlpha
                     name: "default",
                     pattern: "{controller=Home}/{action=Index}/{id?}");
                 endpoints.MapRazorPages();
-                endpoints.MapHub<ChatHub>("/Chathub");
+                endpoints.MapHub<ChatHub>("ChatClient");
             });
         }
     }

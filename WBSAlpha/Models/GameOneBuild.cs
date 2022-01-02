@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 /*
 Modified By:    Quinn Helm
-Date:           21-11-2021
+Date:           27-12-2021
 */
 namespace WBSAlpha.Models
 {
@@ -49,9 +49,13 @@ namespace WBSAlpha.Models
         public string Notes { get; set; }
 
         [Required]
-        [Range(0,5)]
         [Display(Name = "Build Rating")]
         public int Rating { get; set; }
+
+        // I realized there's no way to calculate average if you aren't tracking number of times the build is rated
+        [Required]
+        [Display(Name = "Votes Count")]
+        public int Votes { get; set; } 
 
         [Required]
         [DataType(DataType.Date)]

@@ -1,7 +1,6 @@
-﻿@page
-<div class="container">
-    <div class="row">
-        <div class="col-4 offset-4 text-center align-middle mx-auto" style="border: 2px solid black; height: 20vh;">
+﻿<div class="container">
+    <div class="row align-middle p-5">
+        <div class="col-4 offset-4 text-center mx-auto" style="border: 2px solid black; height: 20vh;">
             <h1 class="h1">@ViewBag.UserStandingID</h1>
             @if (@ViewBag.Banned == true)
             {
@@ -19,8 +18,8 @@
             {
                 @if (@ViewBag.ValidUser == true)
                 {
-                    <p style="height: 10vh;">Welcome to Chat!</p>
-                    <a class="btn btn-success" asp-controller="Games" asp-action="Chathub">Enter Chat</a>
+                    <h3 class="m-2">Welcome to Chat!</h3>
+                    <a class="btn btn-success m-2" asp-controller="Games" asp-action="Chats">Enter Chat</a>
                 }
                 else
                 {
