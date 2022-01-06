@@ -1,4 +1,5 @@
-﻿using WBSAlpha.Models;
+﻿using System.ComponentModel.DataAnnotations;
+using WBSAlpha.Models;
 /*
 Modified By:    Quinn Helm
 Date:           02-01-2022
@@ -12,6 +13,8 @@ namespace WBSAlpha.ViewModels
     {
         public CoreUser TargetUser { get; set; }
         public Standing UserStanding { get; set; }
+        [Display(Name = "Date of Birth")]
+        public string UserAge { get; set; } // specified separately to fix formatting
         public bool IsAModerator { get; set; }
     }
 }

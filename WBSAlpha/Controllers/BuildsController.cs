@@ -119,35 +119,38 @@ namespace WBSAlpha.Controllers
             }
 
             var user = await _context.Users.FindAsync(gameOneBuild.UserID);
-            if (user != null)
+            BuildRatingModel Rater = new(); // create a new instance of the viewmodel BuildRatingModel
+            Rater.BuildID = gameOneBuild.BuildID;
+            Rater.BuildName = gameOneBuild.BuildName;
+            Rater.Description = gameOneBuild.Description;
+            Rater.Notes = gameOneBuild.Notes;
+            Rater.CreationDate = gameOneBuild.CreationDate;
+            Rater.CreatorName = user.UserName;
+            Rater.Votes = gameOneBuild.Votes;
+            Rater.Rating = (gameOneBuild.Votes > 0) ? (gameOneBuild.Rating / gameOneBuild.Votes) : 0; // integer division because precision isn't life threatening
+
+            Rater.WeaponOne = await _context.Weapons.FindAsync(gameOneBuild.WeaponOne);
+            Rater.WeaponTwo = await _context.Weapons.FindAsync(gameOneBuild.WeaponTwo);
+            Rater.OffensiveRuneOne = await _context.Runes.FindAsync(gameOneBuild.OffensiveRuneOne);
+            Rater.OffensiveRuneTwo = await _context.Runes.FindAsync(gameOneBuild.OffensiveRuneTwo);
+            Rater.DefensiveRune = await _context.Runes.FindAsync(gameOneBuild.DefensiveRune);
+
+            var thisUser = await _userManager.GetUserAsync(User);
+            if (thisUser != null)
             {
-                BuildRatingModel Rater = new(); // create a new instance of the viewmodel BuildRatingModel
-                Rater.BuildID = gameOneBuild.BuildID;
-                Rater.BuildName = gameOneBuild.BuildName;
-                Rater.Description = gameOneBuild.Description;
-                Rater.Notes = gameOneBuild.Notes;
-                Rater.CreationDate = gameOneBuild.CreationDate;
-                Rater.CreatorName = user.UserName;
-                Rater.Votes = gameOneBuild.Votes;
-                Rater.Rating = (gameOneBuild.Votes > 0) ? (gameOneBuild.Rating / gameOneBuild.Votes) : 0; // integer division because precision isn't life threatening
-
-                Rater.WeaponOne = await _context.Weapons.FindAsync(gameOneBuild.WeaponOne);
-                Rater.WeaponTwo = await _context.Weapons.FindAsync(gameOneBuild.WeaponTwo);
-                Rater.OffensiveRuneOne = await _context.Runes.FindAsync(gameOneBuild.OffensiveRuneOne);
-                Rater.OffensiveRuneTwo = await _context.Runes.FindAsync(gameOneBuild.OffensiveRuneTwo);
-                Rater.DefensiveRune = await _context.Runes.FindAsync(gameOneBuild.DefensiveRune);
-
-                var thisUser = await _userManager.GetUserAsync(User);
                 bool roleValid = await _userManager.IsInRoleAsync(thisUser, "Administrator");
                 // to control whether user can rate the build or not, they must not be the build's creator
                 bool isOwner = (thisUser != null) && (thisUser.Id.Equals(gameOneBuild.UserID));
                 bool canDelete = isOwner || roleValid;
                 ViewData["IsOwner"] = isOwner;
                 ViewData["CanDelete"] = canDelete;
-
-                return View(Rater);
             }
-            return RedirectToAction(nameof(Index)); // if all else fails, return to index
+            else
+            {
+                ViewData["IsOwner"] = false;
+                ViewData["CanDelete"] = false;
+            }
+            return View(Rater);
         }
 
         // GET: Builds/Create

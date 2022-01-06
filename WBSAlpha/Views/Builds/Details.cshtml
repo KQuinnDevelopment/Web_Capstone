@@ -1,4 +1,4 @@
-﻿@model WBSAlpha.Models.BuildRatingModel
+﻿@model WBSAlpha.ViewModels.BuildRatingModel
 @{
     ViewData["Title"] = "Build Details";
     bool owner = (bool)ViewData["IsOwner"];
@@ -74,8 +74,8 @@
         </div>
         @{ if (owner == false)
             {
-                <div class="row py-1">
-                    <form class="col-6 mx-auto" asp-action="Rate" method="post">
+                <div class="row py-1 mb-2">
+                    <form class="col-6 offset-3" asp-action="Rate" method="post">
                         @Html.HiddenFor(b => b.BuildID)
                         <div class="row mx-auto">
                             <div class="form-check form-check-inline mx-3">

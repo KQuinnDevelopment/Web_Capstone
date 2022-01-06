@@ -12,9 +12,10 @@ using System.Threading.Tasks;
 using WBSAlpha.Data;
 using WBSAlpha.Hubs;
 using WBSAlpha.Models;
+using WBSAlpha.ViewModels;
 /*
 Modified By:    Quinn Helm
-Date:           02-01-2022
+Date:           05-01-2022
 */
 namespace WBSAlpha.Controllers
 {
@@ -190,7 +191,7 @@ namespace WBSAlpha.Controllers
             List<Chatroom> rooms = _dbContext.Chatrooms.ToList();
             int id = (rooms.Count > 0) ? rooms.First().ChatID : -1;
             List<Message> messages = (rooms.Count > 0) ? new(100) : new(0);
-            string[] userNames = (rooms.Count > 0) ? new string[100] : new string[0];
+            string[] userNames = (rooms.Count > 0) ? new string[100] : Array.Empty<string>();
             if (id > -1)
             {
                 messages = await _dbContext.Messages.Where(m => m.ChatID == id).ToListAsync();
@@ -315,6 +316,9 @@ namespace WBSAlpha.Controllers
             }
         }
 
+        /// <summary>
+        /// DateTimes to search for and between, as necessary for the chat history feature.
+        /// </summary>
         public class SearchInput
         {
             [DataType(DataType.Date)]
@@ -339,28 +343,25 @@ namespace WBSAlpha.Controllers
         {
             // get list of standings with 3 or more kicks
             List<Standing> rudeness = await _dbContext.Standings.Where(s => s.KickCount >= 3).ToListAsync();
-            List<CoreUser> rudeUsers = (rudeness != null) ? new(rudeness.Count) : new(0);
             List<Report> reports = (rudeness != null) ? new(rudeness.Count) : new(0);
-            List<string> messages = (rudeness != null) ? new(rudeness.Count) : new(0);
-            List<string> reasons = (rudeness != null) ? new(rudeness.Count) : new(0);
+            UserBanViewModel userBans = new();
+            userBans.RudeUsers = (rudeness != null) ? new(rudeness.Count) : new(0);
+            userBans.RudeMessages = (rudeness != null) ? new(rudeness.Count) : new(0);
+            userBans.Reasons = (rudeness != null) ? new(rudeness.Count) : new(0);
             // get the users & reports that match up with those standing IDs
             foreach (Standing s in rudeness)
             {
-                rudeUsers.Add(await _dbContext.Users.FirstOrDefaultAsync(u => u.StandingID == s.StandingID));
+                userBans.RudeUsers.Add(await _dbContext.Users.FirstOrDefaultAsync(u => u.StandingID == s.StandingID));
                 reports.Add(await _dbContext.Reports.FirstOrDefaultAsync(r => r.ReportID == s.Justification));
             }
             Message m;
             foreach (Report r in reports)
             {
                 m = await _dbContext.Messages.FirstOrDefaultAsync(msg => msg.MessageID == r.MessageID);
-                messages.Add(m.Content);
-                reasons.Add(r.Reason);
+                userBans.RudeMessages.Add(m.Content);
+                userBans.Reasons.Add(r.Reason);
             }
-            ViewData["Title"] = "Manage Bans";
-            ViewData["RudeUsers"] = rudeUsers.ToArray();
-            ViewData["Reasons"] = reasons.ToArray();
-            ViewData["RudeMessages"] = messages.ToArray();
-            return View();
+            return View(userBans);
         }
 
         /// <summary>
@@ -468,6 +469,30 @@ namespace WBSAlpha.Controllers
             return RedirectToAction("ManageModerators");
         }
 
+        /// <summary>
+        /// Attempts to view the profile of a user tied to a given id.
+        /// </summary>
+        /// <param name="view">The view that called this action.</param>
+        /// <param name="id">ID of user to view the profile of.</param>
+        public async Task<ActionResult> UserProfileView(string id, string view)
+        {
+            var user = await _userManager.FindByIdAsync(id);
+            if (user != null)
+            {
+                ProfileViewModel uProfile = new();
+                uProfile.TargetUser = user;
+                uProfile.UserStanding = await _dbContext.Standings.FindAsync(user.StandingID);
+                uProfile.UserAge = user.Age.ToShortDateString(); // better formatting
+                uProfile.IsAModerator = await _userManager.IsInRoleAsync(user, "Moderator");
+                if (uProfile.UserStanding != null)
+                {
+                    ViewData["CalledFrom"] = view;
+                    return View(uProfile);
+                }
+            }
+            return RedirectToAction(view);
+        }
+
         // manage chatrooms
         /// <summary>
         /// Provides a view to an administrator that allows them to add or remove a chatroom.
@@ -475,7 +500,6 @@ namespace WBSAlpha.Controllers
         [Authorize(Roles = "Administrator")]
         public ActionResult ManageChatrooms()
         {
-            ViewData["Title"] = "Manage Chatrooms";
             ViewData["Chatrooms"] = _dbContext.Chatrooms.ToList();
             ChatInput chatIn = new();
             return View(chatIn);
@@ -493,7 +517,7 @@ namespace WBSAlpha.Controllers
             {
                 if (!ModelState.IsValid)
                 {
-                    return View("ManageChatrooms");
+                    return RedirectToAction("ManageChatrooms");
                 }
                 Chatroom newChat = new();
                 newChat.ChatName = ChatroomInput.Name;
@@ -532,6 +556,9 @@ namespace WBSAlpha.Controllers
             }
         }
 
+        /// <summary>
+        /// Used by administrators to create chatrooms by setting the relevant properties.
+        /// </summary>
         public class ChatInput
         {
             [Required]

@@ -1,4 +1,5 @@
-﻿@{
+﻿@model WBSAlpha.ViewModels.ProfileViewModel;
+@{
     ViewData["Title"] = "Manage Moderators";
     CoreUser[] users = (CoreUser[]) ViewData["Users"];
     Standing[] standings = (Standing[]) ViewData["Standing"];
@@ -12,8 +13,8 @@
             <thead>
                 <tr>
                     <th class="mx-auto text-center">User Name</th>
-                    <th class="mx-auto text-center">Kick Count</th>
-                    <th class="mx-auto text-center">Ban Count</th>
+                    <th class="mx-auto text-center">Kick Total</th>
+                    <th class="mx-auto text-center">Ban Total</th>
                     <th class="mx-auto text-center">Action</th>
                 </tr>
             </thead>
@@ -22,9 +23,11 @@
                     @for (int i = 0; i < users.Length; i++)
                     {
                         <tr>
-                            <td class="mx-auto text-center">@users[i].UserName</td>
-                            <td class="mx-auto text-center">@standings[i].KickCount</td>
-                            <td class="mx-auto text-center">@standings[i].BanCount</td>
+                            <td class="mx-auto text-center">
+                                <a asp-controller="Moderation" asp-action="UserProfileView" asp-route-view="ManageModerators" asp-route-id="@users[i].Id">@users[i].UserName</a>
+                            </td>
+                            <td class="mx-auto text-center">@standings[i].KickTotal</td>
+                            <td class="mx-auto text-center">@standings[i].BanTotal</td>
                             <td class="mx-auto text-center">
                                 @if (moderators[i] == true)
                                 {

@@ -1,0 +1,67 @@
+﻿@model WBSAlpha.ViewModels.ProfileViewModel;
+@{
+    ViewData["Title"] = "User Profile";
+    string called = (string)ViewData["CalledFrom"];
+}
+
+<h2 class="mx-auto mb-3 text-center align-middle">@Model.TargetUser.UserName</h2>
+<div class="row">
+    <div class="col-12 mx-auto">
+        <table class="table">
+            <tbody>
+                <tr>
+                    <td class="col-4 mx-auto align-middle text-center">User Name</td>
+                    <td class="col-4 mx-auto align-middle text-center">@Model.TargetUser.UserName</td>
+                    <td class="col-4 mx-auto text-center">
+                        @{
+                            if (User.IsInRole("Administrator"))
+                            {
+                                <a class="btn btn-outline-danger" id="change-username">Change</a>
+                            }
+                        }
+                    </td>
+                </tr>
+                <tr>
+                    <td class="col-4 mx-auto align-middle text-center">Password</td>
+                    <td class="col-4"></td>
+                    <td class="col-4 mx-auto text-center">
+                        @{
+                            if (User.IsInRole("Administrator"))
+                            {
+                                <a class="btn btn-outline-danger" id="change-password">Change</a>
+                            }
+                        }
+                    </td>
+                </tr>
+                <tr>
+                    <td class="col-4 mx-auto align-middle text-center">Age</td>
+                    <td class="col-4 mx-auto align-middle text-center">@Model.UserAge</td>
+                    <td class="col-4"></td>
+                </tr>
+                <tr>
+                    <td class="col-4 mx-auto align-middle text-center">Account Created</td>
+                    <td class="col-4 align-middle text-center">@Model.TargetUser.Created</td>
+                    <td class="col-4"></td>
+                </tr>
+                <tr>
+                    <td class="col-4 mx-auto align-middle text-center">Last Login</td>
+                    <td class="col-4 align-middle text-center">@Model.TargetUser.LastLogin</td>
+                    <td class="col-4"></td>
+                </tr>
+                <tr>
+                    <td class="col-4 mx-auto align-middle text-center">Last Time Kicked</td>
+                    <td class="col-4 align-middle text-center">@Model.UserStanding.KickEnds</td>
+                    <td class="col-4 mx-auto align-middle text-center">Kick Total: @Model.UserStanding.KickTotal</td>
+                </tr>
+                <tr>
+                    <td class="col-4 mx-auto align-middle text-center">Last Time Banned</td>
+                    <td class="col-4 align-middle text-center">@Model.UserStanding.BanEnds</td>
+                    <td class="col-4 mx-auto align-middle text-center">Ban Total: @Model.UserStanding.BanTotal</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+<div class="row mx-auto text-center align-middle">
+    <a asp-controller="Moderation" asp-action="@called" class="btn btn-warning mx-auto">Return to Moderation</a>
+</div>

@@ -1,10 +1,11 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
+using WBSAlpha.Models;
 /*
 Modified By:    Quinn Helm
 Date:           28-12-2021
 */
-namespace WBSAlpha.Models
+namespace WBSAlpha.ViewModels
 {
     /// <summary>
     /// A simple build (view) model that allows for the rating of a given item build.

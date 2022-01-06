@@ -6,24 +6,23 @@
 }
 <div>
     <h1 class="mx-auto p-2 text-center">@ViewData["Title"]</h1>
-
     <partial name="~/Views/Shared/_ModerationNavigation.cshtml" />
+    <div class="row btn-toolbar m-2">
+        @foreach (Chatroom chat in chats)
+        {
+            <a class="btn btn-outline-info text-dark mx-3" asp-controller="Moderation" asp-action="ChatroomHistory" asp-route-id="@chat.ChatID">@chat.ChatName</a>
+        }
+    </div>
+    <form asp-controller="Moderation" asp-action="SearchHistory" method="post" class="row mx-auto form-inline mb-2">
+        <label class="mx-3" asp-for="On"></label>
+        <input class="mx-3 form-control" asp-for="On" type="date" />
+        <label class="mx-3" asp-for="After"></label>
+        <input class="mx-3 form-control" asp-for="After" type="date" />
+        <label class="mx-3" asp-for="Before"></label>
+        <input class="mx-3 form-control" asp-for="Before" type="date" />
+        <button class="btn btn-info" type="submit">Submit Search</button>
+    </form>
     <div class="container mh-100" style="height: 65vh; border:2px solid black;">
-        <div class="row btn-toolbar m-2">
-            @foreach (Chatroom chat in chats)
-            {
-                <a class="btn btn-outline-info text-dark mx-3" asp-controller="Moderation" asp-action="ChatroomHistory" asp-route-id="@chat.ChatID">@chat.ChatName</a>
-            }
-        </div>
-        <form asp-controller="Moderation" asp-action="SearchHistory" method="post" class="row mx-auto form-inline">
-            <label class="mx-2" asp-for="On"></label>
-            <input class="mx-2 form-control" asp-for="On" type="date" />
-            <label class="mx-2" asp-for="After"></label>
-            <input class="mx-2 form-control" asp-for="After" type="date" />
-            <label class="mx-2" asp-for="Before"></label>
-            <input class="mx-2 form-control" asp-for="Before" type="date" />
-            <button class="btn btn-info" type="submit">Submit Search</button>
-        </form>
         <div class="row" style="overflow-y: scroll;">
             <table class="table mx-auto">
                 <thead>

@@ -3,7 +3,7 @@ using System;
 using System.ComponentModel.DataAnnotations;
 /*
 Modified By:    Quinn Helm
-Date:           27-11-2021
+Date:           05-01-2022
 */
 namespace WBSAlpha.Models
 {
@@ -20,6 +20,11 @@ namespace WBSAlpha.Models
         [Display(Name = "Account Created")]
         [DisplayFormat(DataFormatString = "{0:g}", ApplyFormatInEditMode = true)]
         public DateTime Created { get; set; }
+
+        [DataType(DataType.DateTime)]
+        [Display(Name = "Last Logged In")]
+        [DisplayFormat(DataFormatString = "{0:g}", ApplyFormatInEditMode = true)]
+        public DateTime LastLogin { get; set; }
 
         public int StandingID { get; set; }
     }

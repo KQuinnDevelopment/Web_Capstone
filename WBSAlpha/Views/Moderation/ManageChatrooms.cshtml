@@ -1,50 +1,50 @@
 ﻿@model WBSAlpha.Controllers.ModerationController.ChatInput
 @{
+    ViewData["Title"] = "Manage Chatrooms";
     List<Chatroom> chats = (List<Chatroom>)ViewData["Chatrooms"];
 }
-<div>
-    <h1 class="mx-auto p-2 text-center">@ViewData["Title"]</h1>
 
-    <partial name="~/Views/Shared/_ModerationNavigation.cshtml" />
-    <div class="container mh-100" style="height: 65vh; border: 2px solid black; overflow-y: scroll;">
+<h1 class="mx-auto p-2 text-center">@ViewData["Title"]</h1>
+
+<partial name="~/Views/Shared/_ModerationNavigation.cshtml" />
+<div class="row">
+    <form asp-controller="Moderation" asp-action="AddChatroom" method="post" class="mx-auto">
+        <div asp-validation-summary="All" class="text-danger"></div>
         <div class="row">
-            <table class="table mx-auto">
-                <thead>
+            <div class="col">
+                <label asp-for="Name"></label>
+                <input asp-for="Name" class="form-control" />
+            </div>
+            <div class="col">
+                <label asp-for="Description"></label>
+                <input asp-for="Description" class="form-control" />
+            </div>
+        </div>
+        <button type="submit" class="btn btn-outline-dark mt-3">Add Chatroom</button>
+    </form>
+</div>
+<div class="container mh-100" style="height: 65vh; border: 2px solid black; overflow-y: scroll;">
+    <div class="row">
+        <table class="table mx-auto">
+            <thead>
+                <tr>
+                    <th class="mx-auto text-center">Chatroom Name</th>
+                    <th class="mx-auto text-center">Description</th>
+                    <th class="mx-auto text-center">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (Chatroom chat in chats)
+                {
                     <tr>
-                        <th class="mx-auto text-center">Chatroom Name</th>
-                        <th class="mx-auto text-center">Description</th>
-                        <th class="mx-auto text-center">Action</th>
+                        <td class="mx-auto text-center">@chat.ChatName</td>
+                        <td class="mx-auto text-center">@chat.Description</td>
+                        <td class="mx-auto text-center">
+                            <a class="btn btn-danger" asp-controller="Moderation" asp-action="DeleteChatroom" asp-route-id="@chat.ChatID">Delete</a>
+                        </td>
                     </tr>
-                </thead>
-                <tbody>
-                    @foreach (Chatroom chat in chats)
-                    {
-                        <tr>
-                            <td class="mx-auto text-center">@chat.ChatName</td>
-                            <td class="mx-auto text-center">@chat.Description</td>
-                            <td class="mx-auto text-center">
-                                <a class="btn btn-danger" asp-controller="Moderation" asp-action="DeleteChatroom" asp-route-id="@chat.ChatID">Delete</a>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
-        <div class="row">
-            <form asp-controller="Moderation" asp-action="AddChatroom" method="post" class="row">
-                <div asp-validation-summary="All" class="text-danger"></div>
-                <div class="form-group">
-                    <label asp-for="Name"></label>
-                    <input asp-for="Name" class="form-control" />
-                    <span asp-validation-for="Name" class="text-danger"></span>
-                </div>
-                <div class="form-group">
-                    <label asp-for="Description"></label>
-                    <input asp-for="Description" class="form-control" />
-                    <span asp-validation-for="Description" class="text-danger"></span>
-                </div>
-                <button type="submit" class="btn btn-outline-dark text-dark mx-auto p-2">Add Chatroom</button>
-            </form>
-        </div>
+                }
+            </tbody>
+        </table>
     </div>
 </div>

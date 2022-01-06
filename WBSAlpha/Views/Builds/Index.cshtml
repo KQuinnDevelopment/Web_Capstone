@@ -49,7 +49,7 @@
                 <td class="mx-auto text-center">
                     @{
                         <a asp-action="Details" asp-route-id="@item.BuildID">Details</a>
-                        if (active.Equals(item.UserID) || User.IsInRole("Administrator"))
+                        if ((active != null && active.Equals(item.UserID)) || User.IsInRole("Administrator"))
                         {
                             <span> | </span>
                             <a asp-action="Delete" asp-route-id="@item.BuildID">Delete</a>
