@@ -8,19 +8,13 @@
 
 <partial name="~/Views/Shared/_ModerationNavigation.cshtml" />
 <div class="row">
-    <form asp-controller="Moderation" asp-action="AddChatroom" method="post" class="mx-auto">
+    <form asp-controller="Moderation" asp-action="AddChatroom" method="post" class="mx-auto form-inline mb-2">
         <div asp-validation-summary="All" class="text-danger"></div>
-        <div class="row">
-            <div class="col">
-                <label asp-for="Name"></label>
-                <input asp-for="Name" class="form-control" />
-            </div>
-            <div class="col">
-                <label asp-for="Description"></label>
-                <input asp-for="Description" class="form-control" />
-            </div>
-        </div>
-        <button type="submit" class="btn btn-outline-dark mt-3">Add Chatroom</button>
+        <label asp-for="Name" class="mr-1"></label>
+        <input asp-for="Name" class="form-control mr-3" />
+        <label asp-for="Description" class="mr-1"></label>
+        <input asp-for="Description" class="form-control mr-3" />
+        <button type="submit" class="btn btn-outline-dark">Add Chatroom</button>
     </form>
 </div>
 <div class="container mh-100" style="height: 65vh; border: 2px solid black; overflow-y: scroll;">

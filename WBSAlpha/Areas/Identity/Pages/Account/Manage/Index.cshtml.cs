@@ -13,7 +13,7 @@ using WBSAlpha.Data;
 using WBSAlpha.Models;
 /*
 Modified By:    Quinn Helm
-Date:           01-01-2022
+Date:           07-01-2022
 */
 namespace WBSAlpha.Areas.Identity.Pages.Account.Manage
 {
@@ -70,6 +70,9 @@ namespace WBSAlpha.Areas.Identity.Pages.Account.Manage
         [BindProperty]
         public InputModel Input { get; set; }
 
+        /// <summary>
+        /// The input model to bind changable parameters to, from the Identity index form.
+        /// </summary>
         public class InputModel
         {
             [Display(Name = "Public User Name")]
@@ -86,6 +89,9 @@ namespace WBSAlpha.Areas.Identity.Pages.Account.Manage
             public string Email { get; set; }
         }
 
+        /// <summary>
+        /// Loads the given user profile, populating important and end-user relevant data.
+        /// </summary>
         private async Task LoadAsync(CoreUser user)
         {
             string userName = user.UserName;
@@ -125,6 +131,9 @@ namespace WBSAlpha.Areas.Identity.Pages.Account.Manage
             };
         }
 
+        /// <summary>
+        /// If the user is authorized to view this profile, load their information and return the profile view.
+        /// </summary>
         public async Task<IActionResult> OnGetAsync()
         {
             var user = await _userManager.GetUserAsync(User);
@@ -143,6 +152,10 @@ namespace WBSAlpha.Areas.Identity.Pages.Account.Manage
             return Page();
         }
 
+        /// <summary>
+        /// When the user updates their information on the Identity index form, this is responsible for 
+        /// updating it within the database.
+        /// </summary>
         public async Task<IActionResult> OnPostAsync()
         {
             var user = await _userManager.GetUserAsync(User);

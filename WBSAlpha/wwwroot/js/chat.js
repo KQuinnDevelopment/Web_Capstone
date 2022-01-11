@@ -1,7 +1,7 @@
 ﻿"use strict";
 /*
 Modified By: Quinn Helm
-Date:        03-12-2021
+Date:        11-01-2022
 */
 var connection = new signalR.HubConnectionBuilder().withUrl("/ChatClient").build();
 var roomID = -1;
@@ -13,17 +13,20 @@ document.getElementById("userSend").disabled = true;
 // receive message
 connection.on("ReceiveMessage", (content) => {
     var li = document.createElement("li");
-    li.className = "row mx-auto";
+    li.className = "row px-0 mx-0";
     li.id = content.name;
+    var p = document.createElement("p");
+    p.className = "col-10";
+    p.textContent = `${content.name} (${content.time}): ${rebuildString(content.message)} `;
     var a = document.createElement("a");
-    a.className = "text-info mx-auto";
+    a.className = "text-info col-2";
     a.id = content.mId;
-    a.innerHTML = content.name;
+    a.innerHTML = "Report";
     a.addEventListener("click", function (event) {
         reportMe(content.mId);
         event.preventDefault();
     });
-    li.textContent = `${content.name} - ${content.time}: ${rebuildString(content.message)} `;
+    li.appendChild(p);
     li.appendChild(a);
     document.getElementById("chatBox").appendChild(li);
 });
@@ -33,35 +36,37 @@ connection.on("ReceivePrivateMessage", (pm) => {
         var li = document.createElement("li");
         li.className = "nav-item";
         li.id = pm.name;
-        if (content.mId != -1) {
+        if (pm.mId != -1) {
             var a = document.createElement("a");
             a.className = "text-info";
             a.id = parseInt(pm.key);
             a.innerHTML = pm.name;
             a.addEventListener("click", function (event) {
-                reportMe(pm.mId);
+                swapRoom(parseInt(pm.key), true);
                 event.preventDefault();
             });
-            li.appendChild(a);
         }
         li.appendChild(a);
         document.getElementById("chatList").appendChild(li);
     } else {
         var li = document.createElement("li");
-        li.className = "row mx-auto";
+        li.className = "row px-0 mx-0";
         li.id = pm.mId;
-        if (content.mId != -1) {
+        var p = document.createElement("p");
+        p.className = "col-10";
+        p.textContent = `${content.name} (${content.time}): ${rebuildString(content.message)} `;
+        li.appendChild(p);
+        if (pm.mId != -1) {
             var a = document.createElement("a");
-            a.className = "text-info";
+            a.className = "text-info col-2";
             a.id = parseInt(pm.key);
-            a.innerHTML = pm.name;
+            a.innerHTML = "Report";
             a.addEventListener("click", function (event) {
                 reportMe(pm.mId);
                 event.preventDefault();
             });
             li.appendChild(a);
         }
-        li.textContent = `${pm.name} - ${pm.time}: ${rebuildString(pm.message)}`;
         document.getElementById("chatBox").appendChild(li);
     }
 });
@@ -100,12 +105,10 @@ function sendMessage() {
 function swapRoom(id, isPrivate) {
     document.getElementById("userSend").disabled = true;
     document.getElementById("chatBox").innerHTML = "";
-    console.log("joining " + id);
     connection.invoke("ChangeChats", id, roomID, isPrivate, wasPrivate).catch(function (error) {
         return console.error(error.toString());
     });
     wasPrivate = isPrivate;
-    document.getElementById("userSend").disabled = false;
 }
 // report message prompt!
 function reportMe(id) {
@@ -120,6 +123,7 @@ function reportMe(id) {
 // need to make sure that when user change rooms, update the text chat
 // as well as roomID and roomName variables
 connection.on("AddChatroom", (room) => {
+    // called client side by UpdateChats method
     var li = document.createElement("li");
     li.className = "nav-item";
     li.id = room.name;
@@ -137,9 +141,15 @@ connection.on("AddChatroom", (room) => {
         roomID = parseInt(room.id);
     }
 });
+connection.on("JoinRoom", (room) => {
+    // called client side by ChangeChats method
+    roomID = (room.id);
+    document.getElementById("userSend").disabled = false;
+});
 connection.on("AddNewUser", (user) => {
+    // called client side by UpdateUserList method
     var li = document.createElement("li");
-    li.className = "row mx-auto p-1";
+    li.className = "row mx-auto text-center p-1";
     li.id = user.name;
     var a = document.createElement("a");
     a.className = "text-info";
@@ -156,11 +166,11 @@ connection.on("AddNewUser", (user) => {
         document.getElementById("normalUsers").appendChild(li);
     }
 });
-
+// user is disconnected from chat
 connection.on("Disconnect", function () {
     connection.stop();
 });
-
+// this occurs when the user enters the chat
 connection.start().then(function () {
     document.getElementById("userSend").disabled = false;
     document.getElementById("userSend").addEventListener("click", function (event) {

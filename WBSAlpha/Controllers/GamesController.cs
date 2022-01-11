@@ -8,7 +8,7 @@ using WBSAlpha.Data;
 using WBSAlpha.Models;
 /*
 Modified By:    Quinn Helm
-Date:           23-12-2021
+Date:           07-01-2022
 */
 namespace WBSAlpha.Controllers
 {
@@ -51,6 +51,10 @@ namespace WBSAlpha.Controllers
             }
             else
             {
+                if (await _userManager.IsInRoleAsync(user, "Administrator"))
+                {
+                    return Forbid(); // administrators not allowed in chat
+                }
                 ValidUserName = !user.NormalizedUserName.Equals(user.NormalizedEmail);
                 DateTime time = DateTime.Now;
                 Standing uStanding = await _dbContext.Standings.FirstOrDefaultAsync(u => u.StandingID == user.StandingID);
@@ -95,6 +99,9 @@ namespace WBSAlpha.Controllers
             return View();
         }
 
+        /// <summary>
+        /// This is used by the chats view to enter the actual chat client.
+        /// </summary>
         public ActionResult Chats()
         {
             return View("ChatClient");

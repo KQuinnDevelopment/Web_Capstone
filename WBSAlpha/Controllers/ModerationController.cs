@@ -15,7 +15,7 @@ using WBSAlpha.Models;
 using WBSAlpha.ViewModels;
 /*
 Modified By:    Quinn Helm
-Date:           05-01-2022
+Date:           11-01-2022
 */
 namespace WBSAlpha.Controllers
 {
@@ -59,29 +59,19 @@ namespace WBSAlpha.Controllers
             DateTime current = DateTime.Now;
             DateTime lastPeriod = current.AddDays(-1);
             List<Message> messages = await _dbContext.Messages.Where(m => m.Timestamp >= lastPeriod).ToListAsync();
-            List<Report> reports = (messages != null) ? new(messages.Count) : new(0);
-            List<string> userIDs = (messages != null) ? new(messages.Count) : new(0);
+            int reports = 0;
+            int userIDs = 0;
             if (messages != null)
             {
+                userIDs = messages.Select(m => m.SentFromUser).Distinct().Count();
                 foreach (Message m in messages)
                 {
-                    if (!userIDs.Contains(m.SentFromUser))
-                    {
-                        userIDs.Add(m.SentFromUser);
-                    }
-                    Report report = await _dbContext.Reports.FirstOrDefaultAsync(r => r.MessageID == m.MessageID);
-                    if (report != null)
-                    {
-                        reports.Add(report);
-                    }
+                    reports += await _dbContext.Reports.Where(r => r.MessageID == m.MessageID).CountAsync();
                 }
             }
-            // there's better ways to do this I'm sure... ugh
-            reports.TrimExcess();
-            userIDs.TrimExcess();
-            ViewData["UserCount"] = (messages != null) ? messages.Count : 0;
-            ViewData["MessageCount"] = reports.Count;
-            ViewData["ReportsCount"] = userIDs.Count;
+            ViewData["UserCount"] = userIDs;
+            ViewData["MessageCount"] = (messages != null) ? messages.Count : 0;
+            ViewData["ReportsCount"] = reports;
             return View();
         }
 

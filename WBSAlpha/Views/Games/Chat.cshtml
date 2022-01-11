@@ -4,13 +4,13 @@
             <h1 class="h1">@ViewBag.UserStandingID</h1>
             @if (@ViewBag.Banned == true)
             {
-                <p style="height: 10vh;">You've been banned!</p>
+                <h3 class="m-2">You've been banned!</h3>
                 <p class="text-danger">Ban Ends: @ViewBag.JailEnds</p>
                 <a class="btn btn-danger" asp-controller="Games" asp-action="Index">Return</a>
             }
             else if (@ViewBag.Kicked == true)
             {
-                <p style="height: 10vh;">You've been kicked!</p>
+                <h3 class="m-2">You've been kicked!</h3>
                 <p class="text-danger">Kick Ends: @ViewBag.JailEnds</p>
                 <a class="btn btn-danger" asp-controller="Games" asp-action="Index">Return</a>
             }
@@ -23,7 +23,8 @@
                 }
                 else
                 {
-                    <p class="text-warning" style="height: 10vh;">Username invalid, please change it.</p>
+                    <h3 class="m-2">Invalid Username!</h3>
+                    <p class="text-warning m-1">Please change it.</p>
                     <a class="btn btn-warning" asp-area="Identity" asp-page="/Account/Manage/Index">Change Username</a>
                 }
             }

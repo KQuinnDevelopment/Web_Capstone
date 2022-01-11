@@ -23,6 +23,9 @@ namespace WBSAlpha.Controllers
         private readonly ApplicationDbContext _context;
         private readonly IAuthorizationService _authorization;
 
+        /// <summary>
+        /// Builds Constructor.
+        /// </summary>
         public BuildsController(UserManager<CoreUser> userManager,
             ApplicationDbContext context,
             IAuthorizationService authorizationService)
@@ -32,6 +35,12 @@ namespace WBSAlpha.Controllers
             _authorization = authorizationService;
         }
 
+        /// <summary>
+        /// Load the index of available game builds that match the given search text, if any, arranged 
+        /// by the given sorting.
+        /// </summary>
+        /// <param name="sorting">Sorting to arrange the builds by.</param>
+        /// <param name="searchText">Text to filter builds.</param>
         [AllowAnonymous]
         public async Task<IActionResult> Index(string sorting, string searchText)
         {
@@ -103,7 +112,10 @@ namespace WBSAlpha.Controllers
             return View(outBuilds);
         }
 
-        // GET: Builds/Details/5
+        /// <summary>
+        /// Attempts to load the given item build with a viewmodel intended to apply a rating to the build.
+        /// </summary>
+        /// <param name="id">ID of the build.</param>
         [AllowAnonymous]
         public async Task<IActionResult> Details(int? id)
         {
@@ -153,13 +165,18 @@ namespace WBSAlpha.Controllers
             return View(Rater);
         }
 
-        // GET: Builds/Create
+        /// <summary>
+        /// Loads the build creation form with a fresh BuildMaker viewmodel.
+        /// </summary>
         public IActionResult Create()
         {
             return View(new BuildMaker(_context));
         }
 
-        // POST: Builds/Create
+        /// <summary>
+        /// Attempts to create a GameOneBuild object according to the parameters bound in the BuildMaker object and save it to the database.
+        /// </summary>
+        /// <param name="build">BuildMaker object mapped with user's form parameters.</param>
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(BuildMaker build)
@@ -190,7 +207,10 @@ namespace WBSAlpha.Controllers
             return View(new BuildMaker(_context));
         }
 
-        // POST: rating a build
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="rater">Rater option with the user's desired rating.</param>
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Rate(BuildRatingModel rater)
@@ -234,7 +254,10 @@ namespace WBSAlpha.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        // GET: Builds/Delete/5
+        /// <summary>
+        /// Attempts to delete a build if the user is authorized to do so.
+        /// </summary>
+        /// <param name="id">ID of the build.</param>
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -285,7 +308,10 @@ namespace WBSAlpha.Controllers
             return RedirectToAction(nameof(Index)); // if all else fails, return to index
         }
 
-        // POST: Builds/Delete/5
+        /// <summary>
+        /// Deletes the given build from the database assuming the user is authorized to do so.
+        /// </summary>
+        /// <param name="id">ID of the build.</param>
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
@@ -306,6 +332,10 @@ namespace WBSAlpha.Controllers
             return RedirectToAction(nameof(Index));
         }
 
+        /// <summary>
+        /// Check to see if a build with the given ID exists.
+        /// </summary>
+        /// <param name="id">ID of the build to check.</param>
         private bool GameOneBuildExists(int id)
         {
             return _context.GameOneBuilds.Any(e => e.BuildID == id);

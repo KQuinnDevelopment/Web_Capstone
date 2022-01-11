@@ -3,14 +3,11 @@
 
     <partial name="~/Views/Shared/_ModerationNavigation.cshtml" />
     <div class="container mh-100" style="height: 65vh; border:2px solid black;">
-        <div class="row mx-auto p-2 text-center align-center">
-            <p>Number of unique users today: @ViewData["UserCount"]</p>
-        </div>
-        <div class="row mx-auto p-2 text-center align-center">
-            <p>Number of messages sent today: @ViewData["MessageCount"]</p>
-        </div>
-        <div class="row mx-auto p-2 text-center align-center">
-            <p>Number of reports generated today: @ViewData["ReportsCount"]</p>
-        </div>
+        <h4 class="row pt-2 mx-auto">Users in Chat Today</h4>
+        <p class="row pt-1 mx-auto">@ViewData["UserCount"]</p>
+        <h4 class="row pt-3 mx-auto">Messages Sent Today</h4>
+        <p class="row pt-1 mx-auto">@ViewData["MessageCount"]</p>
+        <h4 class="row pt-3 mx-auto">Reports Generated Today</h4>
+        <p class="row p-1 mx-auto">@ViewData["ReportsCount"]</p>
     </div>
 </div>

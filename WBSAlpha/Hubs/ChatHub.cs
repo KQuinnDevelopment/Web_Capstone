@@ -10,7 +10,7 @@ using WBSAlpha.Data;
 using WBSAlpha.Models;
 /*
 Modified By:    Quinn Helm
-Date:           03-12-2021
+Date:           11-01-2022
 */
 namespace WBSAlpha.Hubs
 {
@@ -19,13 +19,11 @@ namespace WBSAlpha.Hubs
     {
         private readonly ILogger<ChatHub> _logging;
         private readonly ApplicationDbContext _dbContext;
-        private readonly DateTime _today; // so that chatrooms can be populated according to login
 
         public ChatHub(ApplicationDbContext context, ILogger<ChatHub> logger)
         {
             _dbContext = context;
             _logging = logger;
-            _today = DateTime.Now;
         }
         
         public override async Task OnConnectedAsync()
@@ -83,14 +81,14 @@ namespace WBSAlpha.Hubs
                     name = userName,
                     time = mTime.ToShortTimeString(),
                     message = m,
-                    messageID = id
+                    mID = id
                 });
                 await Clients.Caller.SendAsync("ReceiveMessage", new
                 {
                     name = userName,
                     time = mTime.ToShortTimeString(),
                     message = m,
-                    messageID = id
+                    mID = id
                 });
             }
         }
@@ -125,27 +123,27 @@ namespace WBSAlpha.Hubs
         /// Attempt to send a message privately -- from one user to another, in their own room.
         /// </summary>
         /// <param name="toUser">Standing of the user in question.</param>
-        /// <param name="message">Message to send privately.</param>
-        public async Task SendPrivateMessage(int toUser, string message)
+        /// <param name="messageContents">Message to send privately.</param>
+        public async Task SendPrivateMessage(int toUser, string messageContents)
         {
-            if (!message.Equals(""))
+            if (!messageContents.Equals(""))
             {
-                int messageID = -1;
+                int messageID = -1; // the ID of this new message, if applicable
                 string from = "Empty";
-                int fKey = -1;
+                int fKey = -1; // standingID of this user
                 string to = "Empty2";
                 DateTime sentAt = DateTime.Now;
-                int outKey = toUser;
+                int outKey = toUser; // this key should remain consistent when these two users are chatting
                 try
                 {
                     CoreUser fUser = await _dbContext.Users.FindAsync(Context.UserIdentifier);
-                    CoreUser tUser = await _dbContext.Users.FirstOrDefaultAsync(u => u.StandingID == toUser);
+                    CoreUser tUser = await _dbContext.Users.FirstAsync(u => u.StandingID == toUser);
                     from = fUser.UserName;
                     fKey = fUser.StandingID;
                     to = tUser.Id;
 
                     Message sent = new();
-                    sent.Content = message;
+                    sent.Content = messageContents;
                     sent.Timestamp = sentAt;
                     sent.SentFromUser = Context.UserIdentifier;
                     sent.SentToUser = to;
@@ -162,10 +160,10 @@ namespace WBSAlpha.Hubs
                 if (messageID > -1)
                 {
                     await Clients.User(Context.UserIdentifier).SendAsync("ReceivePrivateMessage", new {
-                        name = from, time = sentAt.ToShortTimeString(), content = message, mId = messageID, key = outKey
+                        name = from, time = sentAt.ToShortTimeString(), message = messageContents, mId = messageID, key = outKey
                     });
                     await Clients.User(to).SendAsync("ReceivePrivateMessage", new {
-                        name = from, time = sentAt.ToShortTimeString(), content = message, mId = messageID, key = outKey
+                        name = from, time = sentAt.ToShortTimeString(), message = messageContents, mId = messageID, key = outKey
                     });
                 }
             }
@@ -196,6 +194,7 @@ namespace WBSAlpha.Hubs
                         }
                     }
 
+                    DateTime _today = DateTime.Today;
                     List<Message> sinceLogin = _dbContext.Messages.Where(m => m.SentFromUser == Context.UserIdentifier
                             || m.SentFromUser == other.Id).Where(m => m.Timestamp >= _today).ToList();
                     CoreUser user;
@@ -205,7 +204,7 @@ namespace WBSAlpha.Hubs
                         await Clients.Caller.SendAsync("ReceivePrivateMessage", new {
                             name = user.UserName,
                             time = m.Timestamp.ToShortTimeString(),
-                            content = m.Content,
+                            message = m.Content,
                             mId = m.MessageID,
                             key = join
                         });
@@ -219,21 +218,27 @@ namespace WBSAlpha.Hubs
                     {
                         await Groups.AddToGroupAsync(Context.UserIdentifier, chat.ChatName);
                         await Groups.RemoveFromGroupAsync(Context.UserIdentifier, exit.ChatName);
+                        await Clients.Caller.SendAsync("JoinRoom", new
+                        {
+                            id = chat.ChatID
+                        });
                     }
-                    // collect last 10 messages that were sent while user was online, send to user
-                    List<Message> sinceLogin = _dbContext.Messages.Where(m => m.ChatID == chat.ChatID)
-                        .Where(m => m.Timestamp >= _today).OrderByDescending(m => m.Timestamp)
-                        .Take(10).ToList();
+                    // collect last 10 messages that were sent within the last hour, send to user
+                    DateTime _lastHour = DateTime.Now.AddHours(-1);
+                    Console.WriteLine($"{DateTime.Now.ToShortTimeString()} - finding messages since {_lastHour.ToShortTimeString()}");
+                    List<Message> sinceLogin = await _dbContext.Messages.Where(m => m.ChatID == chat.ChatID)
+                        .Where(m => m.Timestamp >= _lastHour).OrderBy(m => m.Timestamp).Take(10).ToListAsync();
+                    Console.WriteLine($"There are {sinceLogin.Count} messages to send to the user.");
                     CoreUser user;
                     foreach (Message m in sinceLogin)
                     {
                         user = await _dbContext.Users.FindAsync(m.SentFromUser);
+                        Console.WriteLine($"{user.UserName} ({m.Timestamp.ToShortTimeString()}): {m.Content}");
                         await Clients.Caller.SendAsync("ReceiveMessage", new {
                             name = user.UserName,
                             time = m.Timestamp.ToShortTimeString(),
-                            content = m.Content,
-                            mId = m.MessageID,
-                            key = join
+                            message = m.Content,
+                            mId = m.MessageID
                         });
                     }
                 }
@@ -244,6 +249,9 @@ namespace WBSAlpha.Hubs
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
         private async Task UpdateChats()
         {
             List<Chatroom> chats = await _dbContext.Chatrooms.ToListAsync();
