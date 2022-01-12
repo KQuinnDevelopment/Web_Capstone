@@ -1,19 +1,16 @@
 ﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore;
+using MySql.Data.EntityFramework;
+using System.Data.Entity;
 using WBSAlpha.Models;
 /*
 Modified By:    Quinn Helm
-Date:           18-09-2021
+Date:           12-01-2022
 */
 namespace WBSAlpha.Data
 {
+    [DbConfigurationType(typeof(MySqlEFConfiguration))]
     public class ApplicationDbContext : IdentityDbContext<CoreUser>
     {
-        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
-            : base(options)
-        {
-        }
-
         // additional tables
         public DbSet<Standing> Standings { get; set; }
         public DbSet<Chatroom> Chatrooms { get; set; }
