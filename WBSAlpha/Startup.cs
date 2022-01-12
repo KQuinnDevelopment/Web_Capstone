@@ -34,20 +34,13 @@ namespace WBSAlpha
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddDatabaseDeveloperPageExceptionFilter();
-            if (_env.IsDevelopment())
-            {
-                services.AddDbContext<ApplicationDbContext>(options =>
-                options.UseSqlServer(
-                    Configuration.GetConnectionString("Default")));
-            }
-            else
-            {
-                var connection = Configuration.GetConnectionString("Default");
-                var version = new MySqlServerVersion(new System.Version(8,0,27));
-                services.AddDbContext<ApplicationDbContext>(options => 
-                    options.UseMySql(connection, version)
-                    .EnableDetailedErrors());
-            }
+            
+            var connection = Configuration.GetConnectionString("Default");
+            var version = new MySqlServerVersion(new System.Version(8,0,27));
+            services.AddDbContext<ApplicationDbContext>(options => 
+                options.UseMySql(connection, version)
+                .EnableDetailedErrors());
+
             services.AddIdentity<CoreUser, IdentityRole>(options => options.SignIn.RequireConfirmedAccount = true)
                 .AddEntityFrameworkStores<ApplicationDbContext>()
                 .AddRoles<IdentityRole>()
