@@ -8,7 +8,7 @@ using WBSAlpha.Data;
 using WBSAlpha.Models;
 /*
 Modified By:    Quinn Helm
-Date:           07-01-2022
+Date:           12-01-2022
 */
 namespace WBSAlpha.Controllers
 {
@@ -57,34 +57,23 @@ namespace WBSAlpha.Controllers
                 }
                 ValidUserName = !user.NormalizedUserName.Equals(user.NormalizedEmail);
                 DateTime time = DateTime.Now;
-                Standing uStanding = await _dbContext.Standings.FirstOrDefaultAsync(u => u.StandingID == user.StandingID);
+                Standing uStanding = await _dbContext.Standings.FirstAsync(u => u.StandingID == user.StandingID);
 
                 if (uStanding != null) {
                     if (uStanding.BanEnds != null)
                     {
-                        if (uStanding.BanEnds > time)
+                        UserBanned = uStanding.BanEnds > time;
+                        if (UserBanned)
                         {
-                            UserBanned = true;
-                            JailEnds = (DateTime)uStanding.BanEnds;
-                        } else
-                        {
-                            uStanding.BanEnds = null;
-                            await _dbContext.SaveChangesAsync();
-                            UserBanned = false;
+                            JailEnds = (DateTime) uStanding.BanEnds;
                         }
                     }
                     if (!UserBanned && uStanding.KickEnds != null)
                     {
-                        if (uStanding.KickEnds > time)
+                        UserKicked = uStanding.KickEnds > time;
+                        if (UserKicked)
                         {
-                            UserKicked = true;
                             JailEnds = (DateTime) uStanding.KickEnds;
-                        }
-                        else
-                        {
-                            uStanding.KickEnds = null;
-                            await _dbContext.SaveChangesAsync();
-                            UserKicked = false;
                         }
                     }
                 }

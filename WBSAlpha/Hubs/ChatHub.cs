@@ -250,7 +250,8 @@ namespace WBSAlpha.Hubs
         }
 
         /// <summary>
-        /// 
+        /// Called when the user enters chat to populate a list of available chat rooms 
+        /// for the newly joined user.
         /// </summary>
         private async Task UpdateChats()
         {

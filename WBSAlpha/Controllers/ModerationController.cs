@@ -15,7 +15,7 @@ using WBSAlpha.Models;
 using WBSAlpha.ViewModels;
 /*
 Modified By:    Quinn Helm
-Date:           11-01-2022
+Date:           12-01-2022
 */
 namespace WBSAlpha.Controllers
 {
@@ -152,8 +152,11 @@ namespace WBSAlpha.Controllers
                 {
                     standing.KickEnds = currentTime.AddHours(12);
                 }
-                standing.KickCount += 1;
-                standing.KickTotal += 1;
+                // it wasn't updating properly so I wanted to make sure that it worked by being explicit
+                int kickCount = standing.KickCount + 1;
+                int kickTotal = standing.KickTotal + 1;
+                standing.KickCount = kickCount;
+                standing.KickTotal = kickTotal;
                 standing.Justification = id;
                 report.RespondedTo = true;
                 _dbContext.Standings.Update(standing);
@@ -161,6 +164,7 @@ namespace WBSAlpha.Controllers
                 await _dbContext.SaveChangesAsync();
                 try
                 {
+                    // have to remove the kicked user from chat!
                     await _chatHub.Clients.User(rude.Id).SendAsync("Disconnect");
                 }
                 catch (Exception ex)
@@ -386,12 +390,16 @@ namespace WBSAlpha.Controllers
                         standing.BanEnds = currentTime.AddMonths(1); // user is banned for a month
                     }
                 }
-                standing.BanCount += 1;
-                standing.BanTotal += 1;
+                // it wasn't updating properly so I wanted to make sure that it worked by being explicit
+                int banCount = standing.BanCount + 1;
+                int banTotal = standing.BanTotal + 1;
+                standing.BanCount = banCount;
+                standing.BanTotal = banTotal;
                 _dbContext.Standings.Update(standing);
                 await _dbContext.SaveChangesAsync();
                 try
                 {
+                    // have to force the rude user out of chat
                     await _chatHub.Clients.User(rude.Id).SendAsync("Disconnect");
                 }
                 catch (Exception ex)
@@ -411,7 +419,8 @@ namespace WBSAlpha.Controllers
         [Authorize(Roles = "Administrator")]
         public async Task<ActionResult> ManageModerators()
         {
-            CoreUser[] users = _dbContext.Users.ToArray();
+            CoreUser[] users = _dbContext.Users.OrderBy(u => u.StandingID).ToArray();
+            Standing[] standings = _dbContext.Standings.OrderBy(s => s.StandingID).ToArray();
             bool[] isMod = new bool[users.Length];
             for (int i = 0; i < users.Length; i++)
             {
@@ -419,7 +428,7 @@ namespace WBSAlpha.Controllers
             }
             ViewData["IsMod"] = isMod;
             ViewData["Users"] = users;
-            ViewData["Standing"] = _dbContext.Standings.ToArray();
+            ViewData["Standing"] = standings;
             return View();
         }
 

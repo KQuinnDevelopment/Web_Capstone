@@ -7,13 +7,18 @@ using System.Threading.Tasks;
 using WBSAlpha.Models;
 /*
 Modified By:    Quinn Helm
-Date:           20-12-2021
+Date:           12-01-2022
 */
 namespace WBSAlpha.Data
 {
     public static class DbStart
     {
         public static AppSecrets PW { get; set; }
+
+        /// <summary>
+        /// Ensures that the database is seeded with both roles and users in the event that
+        /// it needs initializing.
+        /// </summary>
         public static async Task<int> SeedRolesAndUsers(IServiceProvider serviceProvider)
         {
             // if db doesn't exist, create it
@@ -38,6 +43,9 @@ namespace WBSAlpha.Data
             return 0;
         }
 
+        /// <summary>
+        /// Populates the database with weapons and runes so that users can generate item builds.
+        /// </summary>
         public static async Task<int> SeedWeaponsAndRunes(IServiceProvider serviceProvider)
         {
             // if db doesn't exist, create it
@@ -164,6 +172,9 @@ namespace WBSAlpha.Data
             return 0;
         }
 
+        /// <summary>
+        /// Attempts to create the administrator and moderator roles that will be assigned to users.
+        /// </summary>
         private static async Task<int> ImportantRoles(RoleManager<IdentityRole> roleManager)
         {
             bool exists = await roleManager.RoleExistsAsync("Administrator");
@@ -187,6 +198,9 @@ namespace WBSAlpha.Data
             return 0;
         }
 
+        /// <summary>
+        /// Attempts to create a moderator and administrator if none are present.
+        /// </summary>
         private static async Task<int> ImportantUsers(IServiceProvider provider, AppSecrets pw)
         {
             ApplicationDbContext _context = provider.GetRequiredService<ApplicationDbContext>();
@@ -197,26 +211,30 @@ namespace WBSAlpha.Data
                 Standing uStanding = new();
                 await _context.Standings.AddAsync(uStanding);
                 await _context.SaveChangesAsync();
-                DateTime atm = DateTime.Now;
-                CoreUser admin = new()
+                if (_context.Standings.Any(s => s.StandingID == uStanding.StandingID))
                 {
-                    Email = "testadmin@wbsgames.ca",
-                    UserName = "ADMINISTRATOR",
-                    Age = atm,
-                    EmailConfirmed = true,
-                    StandingID = uStanding.StandingID,
-                    Created = atm
-                };
-                var result = await userManager.CreateAsync(admin, pw.AdminPassword);
-                if (!result.Succeeded)
-                {
-                    return 1;
-                }
-                {
-                    result = await userManager.AddToRoleAsync(admin, "Administrator");
+                    DateTime atm = DateTime.Now;
+                    CoreUser admin = new()
+                    {
+                        Email = "testadmin@wbsgames.ca",
+                        UserName = "ADMINISTRATOR",
+                        Age = atm,
+                        EmailConfirmed = true,
+                        StandingID = uStanding.StandingID,
+                        Created = atm
+                    };
+                    var result = await userManager.CreateAsync(admin, pw.AdminPassword);
                     if (!result.Succeeded)
                     {
-                        return 2;
+                        return 1;
+                    } 
+                    else 
+                    {
+                        result = await userManager.AddToRoleAsync(admin, "Administrator");
+                        if (!result.Succeeded)
+                        {
+                            return 2;
+                        }
                     }
                 }
             }
@@ -224,28 +242,32 @@ namespace WBSAlpha.Data
             if (hasMod == null)
             {
                 Standing uStanding = new();
-                DateTime atm = DateTime.Now;
-                CoreUser mod = new()
-                {
-                    Email = "testmod@wbsgames.ca",
-                    UserName = "THEWOLF",
-                    Age = atm,
-                    EmailConfirmed = true,
-                    StandingID = uStanding.StandingID,
-                    Created = atm
-                };
                 await _context.Standings.AddAsync(uStanding);
                 await _context.SaveChangesAsync();
-                var result = await userManager.CreateAsync(mod, pw.ModPassword);
-                if (!result.Succeeded)
+                if (_context.Standings.Any(s => s.StandingID == uStanding.StandingID))
                 {
-                    return 3;
-                } else
-                {
-                    result = await userManager.AddToRoleAsync(mod, "Moderator");
+                    DateTime atm = DateTime.Now;
+                    CoreUser mod = new()
+                    {
+                        Email = "testmod@wbsgames.ca",
+                        UserName = "THEWOLF",
+                        Age = atm,
+                        EmailConfirmed = true,
+                        StandingID = uStanding.StandingID,
+                        Created = atm
+                    };
+                    var result = await userManager.CreateAsync(mod, pw.ModPassword);
                     if (!result.Succeeded)
                     {
-                        return 4;
+                        return 3;
+                    }
+                    else
+                    {
+                        result = await userManager.AddToRoleAsync(mod, "Moderator");
+                        if (!result.Succeeded)
+                        {
+                            return 4;
+                        }
                     }
                 }
             }
