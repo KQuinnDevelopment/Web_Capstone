@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Pomelo.EntityFrameworkCore.MySql;
 using System.Net;
 using WBSAlpha.Authorization;
 using WBSAlpha.Data;
@@ -14,26 +15,39 @@ using WBSAlpha.Hubs;
 using WBSAlpha.Models;
 /*
 Modified By:    Quinn Helm
-Date:           28-12-2021
+Date:           12-01-2022
 */
 namespace WBSAlpha
 {
     public class Startup
     {
-        public Startup(IConfiguration configuration)
+        private IWebHostEnvironment _env;
+        public Startup(IConfiguration configuration, IWebHostEnvironment env)
         {
             Configuration = configuration;
+            _env = env;
         }
 
         public IConfiguration Configuration { get; }
 
         // This method gets called by the runtime. Use this method to add services to the container.
-        public void ConfigureServices(IServiceCollection services, IWebHostEnvironment env)
+        public void ConfigureServices(IServiceCollection services)
         {
             services.AddDatabaseDeveloperPageExceptionFilter();
-            services.AddDbContext<ApplicationDbContext>(options =>
+            if (_env.IsDevelopment())
+            {
+                services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlServer(
                     Configuration.GetConnectionString("DefaultConnection")));
+            }
+            else
+            {
+                var connection = Configuration.GetConnectionString("Default");
+                var version = new MySqlServerVersion(new System.Version(8,0,27));
+                services.AddDbContext<ApplicationDbContext>(options => 
+                    options.UseMySql(connection, version)
+                    .EnableDetailedErrors());
+            }
             services.AddIdentity<CoreUser, IdentityRole>(options => options.SignIn.RequireConfirmedAccount = true)
                 .AddEntityFrameworkStores<ApplicationDbContext>()
                 .AddRoles<IdentityRole>()
@@ -43,7 +57,7 @@ namespace WBSAlpha
             services.AddRazorPages();
             services.AddSignalR();
 
-            if (!env.IsDevelopment())
+            if (!_env.IsDevelopment())
             {
                 services.AddHttpsRedirection(options =>
                 {
@@ -72,13 +86,13 @@ namespace WBSAlpha
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public void Configure(IApplicationBuilder app)
         {
             app.UseForwardedHeaders(new ForwardedHeadersOptions
             {
                 ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
             });
-            if (env.IsDevelopment())
+            if (_env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
                 app.UseMigrationsEndPoint();
