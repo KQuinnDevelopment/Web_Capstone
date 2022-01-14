@@ -11,7 +11,7 @@ using WBSAlpha.Data;
 using WBSAlpha.Models;
 /*
 Modified By:    Quinn Helm
-Date:           20-12-2021
+Date:           12-01-2022
 */
 namespace WBSAlpha
 {
@@ -22,10 +22,7 @@ namespace WBSAlpha
             var host = CreateHostBuilder(args).Build();
             var config = host.Services.GetService<IConfiguration>();
             var hosting = host.Services.GetService<IWebHostEnvironment>();
-            if (hosting.IsDevelopment())
-            {
-                DbStart.PW = config.GetSection("SeedingAccounts").Get<AppSecrets>();
-            }
+            DbStart.PW = config.GetSection("SeedingAccounts").Get<AppSecrets>();
             using (var scope = host.Services.CreateScope())
             {
                 DbStart.SeedRolesAndUsers(scope.ServiceProvider).Wait();

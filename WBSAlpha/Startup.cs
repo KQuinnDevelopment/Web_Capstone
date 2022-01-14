@@ -7,7 +7,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Pomelo.EntityFrameworkCore.MySql;
 using System.Net;
 using WBSAlpha.Authorization;
 using WBSAlpha.Data;
@@ -15,7 +14,7 @@ using WBSAlpha.Hubs;
 using WBSAlpha.Models;
 /*
 Modified By:    Quinn Helm
-Date:           12-01-2022
+Date:           14-01-2022
 */
 namespace WBSAlpha
 {
@@ -38,8 +37,7 @@ namespace WBSAlpha
             var connection = Configuration.GetConnectionString("Default");
             var version = new MySqlServerVersion(new System.Version(8,0,27));
             services.AddDbContext<ApplicationDbContext>(options => 
-                options.UseMySql(connection, version)
-                .EnableDetailedErrors());
+                options.UseMySql(connection, version));
 
             services.AddIdentity<CoreUser, IdentityRole>(options => options.SignIn.RequireConfirmedAccount = true)
                 .AddEntityFrameworkStores<ApplicationDbContext>()
@@ -87,15 +85,14 @@ namespace WBSAlpha
             });
             if (_env.IsDevelopment())
             {
-                app.UseDeveloperExceptionPage();
                 app.UseMigrationsEndPoint();
             }
             else
             {
-                app.UseExceptionHandler("/Home/Error");
                 // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
                 app.UseHsts();
             }
+            app.UseExceptionHandler("/Home/Error");
             app.UseHttpsRedirection();
             app.UseStaticFiles();
 

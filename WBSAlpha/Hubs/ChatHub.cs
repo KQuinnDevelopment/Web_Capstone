@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -10,7 +11,7 @@ using WBSAlpha.Data;
 using WBSAlpha.Models;
 /*
 Modified By:    Quinn Helm
-Date:           11-01-2022
+Date:           14-01-2022
 */
 namespace WBSAlpha.Hubs
 {
@@ -19,10 +20,12 @@ namespace WBSAlpha.Hubs
     {
         private readonly ILogger<ChatHub> _logging;
         private readonly ApplicationDbContext _dbContext;
+        private readonly UserManager<CoreUser> _userManager;
 
-        public ChatHub(ApplicationDbContext context, ILogger<ChatHub> logger)
+        public ChatHub(ApplicationDbContext context, UserManager<CoreUser> userManager, ILogger<ChatHub> logger)
         {
             _dbContext = context;
+            _userManager = userManager;
             _logging = logger;
         }
         
@@ -37,7 +40,14 @@ namespace WBSAlpha.Hubs
                 time = DateTime.Now.ToShortDateString(),
                 mId = -1,
             });
+            ConnectionManager.Ids.Add(Context.UserIdentifier);
             await base.OnConnectedAsync();
+        }
+
+        public override async Task OnDisconnectedAsync(Exception exception) 
+        {
+            ConnectionManager.Ids.Remove(Context.UserIdentifier);
+            await base.OnDisconnectedAsync(exception);
         }
 
         /// <summary>
@@ -224,28 +234,41 @@ namespace WBSAlpha.Hubs
                         });
                     }
                     // collect last 10 messages that were sent within the last hour, send to user
-                    DateTime _lastHour = DateTime.Now.AddHours(-1);
-                    Console.WriteLine($"{DateTime.Now.ToShortTimeString()} - finding messages since {_lastHour.ToShortTimeString()}");
-                    List<Message> sinceLogin = await _dbContext.Messages.Where(m => m.ChatID == chat.ChatID)
-                        .Where(m => m.Timestamp >= _lastHour).OrderBy(m => m.Timestamp).Take(10).ToListAsync();
-                    Console.WriteLine($"There are {sinceLogin.Count} messages to send to the user.");
-                    CoreUser user;
-                    foreach (Message m in sinceLogin)
-                    {
-                        user = await _dbContext.Users.FindAsync(m.SentFromUser);
-                        Console.WriteLine($"{user.UserName} ({m.Timestamp.ToShortTimeString()}): {m.Content}");
-                        await Clients.Caller.SendAsync("ReceiveMessage", new {
-                            name = user.UserName,
-                            time = m.Timestamp.ToShortTimeString(),
-                            message = m.Content,
-                            mId = m.MessageID
-                        });
-                    }
+                    await SendMessageHistory(chat, 10);
                 }
             }
             catch (Exception ex)
             {
                 _logging.LogInformation($"User failed to change chatrooms between {leave}->{join} (private: {isPrivate}) @ {DateTime.Now.ToLongTimeString()} - {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// This is responsible for keeping the user up-to-date on the last messages sent in the chatroom so that
+        /// they don't feel lost when joining a conversation/new room.
+        /// </summary>
+        /// <param name="chat">Chatroom the user is in.</param>
+        /// <param name="x">Number of messages to send.</param>
+        private async Task SendMessageHistory(Chatroom chat, int x)
+        {
+            // collect last 10 messages that were sent within the last hour, send to user
+            DateTime _lastHour = DateTime.Now.AddHours(-1);
+            Console.WriteLine($"{DateTime.Now.ToShortTimeString()} - finding messages since {_lastHour.ToShortTimeString()}");
+            List<Message> sinceLogin = await _dbContext.Messages.Where(m => m.ChatID == chat.ChatID)
+                .Where(m => m.Timestamp >= _lastHour).OrderBy(m => m.Timestamp).Take(x).ToListAsync();
+            Console.WriteLine($"There are {sinceLogin.Count} messages to send to the user.");
+            CoreUser user;
+            foreach (Message m in sinceLogin)
+            {
+                user = await _dbContext.Users.FindAsync(m.SentFromUser);
+                Console.WriteLine($"{user.UserName} ({m.Timestamp.ToShortTimeString()}): {m.Content}");
+                await Clients.Caller.SendAsync("ReceiveMessage", new
+                {
+                    name = user.UserName,
+                    time = m.Timestamp.ToShortTimeString(),
+                    message = m.Content,
+                    mId = m.MessageID
+                });
             }
         }
 
@@ -264,7 +287,13 @@ namespace WBSAlpha.Hubs
                     name = chat.ChatName
                 });
             }
-            await Groups.AddToGroupAsync(Context.UserIdentifier, chats.First().ChatName);
+            Chatroom chatroom = chats.First();
+            await Groups.AddToGroupAsync(Context.UserIdentifier, chatroom.ChatName);
+            await Clients.Caller.SendAsync("JoinRoom", new
+            {
+                id = chatroom.ChatID
+            });
+            await SendMessageHistory(chatroom, 10);
         }
 
         /// <summary>
@@ -275,17 +304,39 @@ namespace WBSAlpha.Hubs
             try
             {
                 CoreUser newUser = await _dbContext.Users.FindAsync(Context.UserIdentifier);
-                await Clients.All.SendAsync("AddNewUser", new
+                await Clients.AllExcept(Context.ConnectionId).SendAsync("AddNewUser", new
                 {
                     id = newUser.StandingID,
                     name = newUser.UserName,
                     special = (Context.User.IsInRole("Moderator") || Context.User.IsInRole("Admin"))
                 });
+                CoreUser other;
+                foreach (string id in ConnectionManager.Ids)
+                {
+                    other = await _dbContext.Users.FindAsync(id);
+                    if (other != null)
+                    {
+                        await Clients.Caller.SendAsync("AddNewUser", new
+                        {
+                            id = other.StandingID,
+                            name = other.UserName,
+                            special = (await _userManager.IsInRoleAsync(other, "Moderator") || await _userManager.IsInRoleAsync(other, "Administrator"))
+                        });
+                    }
+                }
             } 
             catch (Exception ex)
             {
                 _logging.LogInformation($"Update User List failed @ {DateTime.Now.ToLongTimeString()} - {ex.Message}");
             }
+        }
+
+        /// <summary>
+        /// A simple way of keeping track of active chat users.
+        /// </summary>
+        private static class ConnectionManager
+        {
+            public static HashSet<string> Ids = new HashSet<string>();
         }
     }
 }

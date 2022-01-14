@@ -9,7 +9,7 @@ using WBSAlpha.Data;
 namespace WBSAlpha.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20220112234834_InitDB")]
+    [Migration("20220113000502_InitDB")]
     partial class InitDB
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
